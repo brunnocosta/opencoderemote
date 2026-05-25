@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createEventRequest, getReconnectDelay, parseSseChunk } from "./events"
+import { createEventRequest, createSseParser, getReconnectDelay, parseSseChunk } from "./events"
 
 describe("parseSseChunk", () => {
   test("parses event and json data", () => {
@@ -14,6 +14,34 @@ describe("parseSseChunk", () => {
 
   test("keeps text data when json parse fails", () => {
     expect(parseSseChunk("data: hello\n\n")).toEqual([{ event: "message", data: "hello" }])
+  })
+
+  test("parses CRLF-delimited event", () => {
+    expect(parseSseChunk('event: message\r\ndata: {"type":"server.connected"}\r\n\r\n')).toEqual([
+      { event: "message", data: { type: "server.connected" } },
+    ])
+  })
+
+  test("parses multiple CRLF-delimited events", () => {
+    expect(parseSseChunk("data: one\r\n\r\nevent: update\r\ndata: two\r\n\r\n")).toEqual([
+      { event: "message", data: "one" },
+      { event: "update", data: "two" },
+    ])
+  })
+
+  test("preserves payload spacing except optional single leading field space", () => {
+    expect(parseSseChunk("event: custom\ndata:  hello \ndata:   there\n\n")).toEqual([
+      { event: "custom", data: " hello \n  there" },
+    ])
+  })
+})
+
+describe("createSseParser", () => {
+  test("buffers partial chunks until event is complete", () => {
+    const parser = createSseParser()
+
+    expect(parser.push("event: update\ndata: hel")).toEqual([])
+    expect(parser.push("lo\n\n")).toEqual([{ event: "update", data: "hello" }])
   })
 })
 

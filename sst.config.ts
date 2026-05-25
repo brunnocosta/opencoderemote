@@ -28,6 +28,7 @@ export default $config({
     }
   },
   async run() {
+    const stage = await import("./infra/stage.js")
     await import("./infra/app.js")
     await import("./infra/lake.js")
     const stats = await import("./infra/stats.js")
@@ -40,6 +41,7 @@ export default $config({
     return {
       StatWorkerUrl: stat.url,
       StatsUrl: stats.app.url,
+      ...(stage.githubActionsDeployRoleArn ? { GithubActionsDeployRoleArn: stage.githubActionsDeployRoleArn } : {}),
     }
   },
 })

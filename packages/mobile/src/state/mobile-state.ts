@@ -13,6 +13,7 @@ export type MobileAction =
   | { type: "connected"; connection: Connection; version: string }
   | { type: "connection.failed"; error: string }
   | { type: "session.selected"; sessionID: string }
+  | { type: "session.cleared" }
   | { type: "messages.loaded"; sessionID: string; messages: SessionMessage[] }
   | { type: "permission.requested"; request: PermissionRequest }
   | { type: "permission.responded"; permissionID: string }
@@ -26,6 +27,7 @@ export function reduceMobileState(state: MobileState, action: MobileAction): Mob
   if (action.type === "connected") return { ...state, connection: action.connection, version: action.version, error: undefined }
   if (action.type === "connection.failed") return { ...state, error: action.error }
   if (action.type === "session.selected") return { ...state, selectedSessionID: action.sessionID }
+  if (action.type === "session.cleared") return { ...state, selectedSessionID: undefined }
   if (action.type === "messages.loaded") return { ...state, messages: { ...state.messages, [action.sessionID]: action.messages } }
   if (action.type === "permission.requested") {
     return {

@@ -61,7 +61,7 @@ export default function App() {
           </View>
         </View>
       ) : null}
-      {api && screen === "sessions" ? <SessionScreen api={api} sessionID={state.selectedSessionID} onBack={() => setScreen("home")} onSelectSession={(sessionID) => dispatch({ type: "session.selected", sessionID })} onOpenDiff={() => setScreen("diff")} /> : null}
+      {api && screen === "sessions" ? <SessionScreen api={api} sessionID={state.selectedSessionID} onBack={() => setScreen("home")} onClearSession={() => dispatch({ type: "session.cleared" })} onSelectSession={(sessionID) => dispatch({ type: "session.selected", sessionID })} onOpenDiff={() => setScreen("diff")} /> : null}
       {api && screen === "files" ? <FileScreen api={api} onBack={() => setScreen("home")} /> : null}
       {api && screen === "diff" ? <DiffScreen api={api} sessionID={state.selectedSessionID} onBack={() => setScreen("sessions")} /> : null}
     </SafeAreaView>

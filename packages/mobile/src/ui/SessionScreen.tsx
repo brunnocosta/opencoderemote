@@ -4,19 +4,27 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native"
 import type { OpencodeApi, SessionMessage } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onBack(): void; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
+export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onBack(): void; onClearSession(): void; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [messages, setMessages] = useState<SessionMessage[]>([])
   const [text, setText] = useState("")
   const [error, setError] = useState<string | undefined>()
 
   useEffect(() => {
-    props.api.listSessions().then(setSessions).catch(() => setSessions([]))
+    setError(undefined)
+    props.api.listSessions().then(setSessions).catch((error) => {
+      setSessions([])
+      setError(error instanceof Error ? error.message : String(error))
+    })
   }, [props.api])
 
   useEffect(() => {
     if (!props.sessionID) return
-    props.api.listMessages(props.sessionID).then(setMessages).catch(() => setMessages([]))
+    setError(undefined)
+    props.api.listMessages(props.sessionID).then(setMessages).catch((error) => {
+      setMessages([])
+      setError(error instanceof Error ? error.message : String(error))
+    })
   }, [props.api, props.sessionID])
 
   async function create() {
@@ -71,7 +79,7 @@ export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onB
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", padding: spacing.md }}>
-        <Pressable onPress={props.onBack}>
+        <Pressable onPress={props.onClearSession}>
           <Text style={{ color: colors.accent }}>Back</Text>
         </Pressable>
         <Text style={{ color: colors.text, fontWeight: "800" }}>{props.sessionID}</Text>

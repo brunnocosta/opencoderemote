@@ -17,6 +17,12 @@ describe("reduceMobileState", () => {
     expect(state.selectedSessionID).toBe("ses_1")
   })
 
+  test("clears selected session", () => {
+    const selected = reduceMobileState(initialMobileState, { type: "session.selected", sessionID: "ses_1" })
+    const state = reduceMobileState(selected, { type: "session.cleared" })
+    expect(state.selectedSessionID).toBeUndefined()
+  })
+
   test("tracks pending permission", () => {
     const state = reduceMobileState(initialMobileState, {
       type: "permission.requested",

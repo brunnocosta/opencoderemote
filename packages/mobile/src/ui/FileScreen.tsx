@@ -43,7 +43,7 @@ export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
       return
     }
     if (path !== ".") {
-      setPath(path.split("/").slice(0, -1).join("/") || ".")
+      setPath(parentPath(path))
       return
     }
     props.onBack()
@@ -75,4 +75,10 @@ export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
       )}
     </View>
   )
+}
+
+function parentPath(path: string) {
+  const index = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
+  if (index <= 0) return "."
+  return path.slice(0, index)
 }

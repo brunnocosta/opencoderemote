@@ -100,21 +100,21 @@ declare module "sst" {
       "type": "sst.sst.Linkable"
       "workgroup": string
     }
-    "InferenceEventLakeIngest": {
+    "LakeIngest": {
       "secret": string
       "type": "sst.sst.Linkable"
       "url": string
     }
-    "InferenceEventLakeIngestConfig": {
+    "LakeIngestConfig": {
       "secret": string
       "streamName": string
       "type": "sst.sst.Linkable"
     }
-    "InferenceEventLakeIngestSecret": {
+    "LakeIngestSecret": {
       "type": "random.index/randomPassword.RandomPassword"
       "value": string
     }
-    "InferenceEventLakeIngestService": {
+    "LakeIngestService": {
       "service": string
       "type": "sst.aws.Service"
       "url": string

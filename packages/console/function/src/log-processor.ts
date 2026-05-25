@@ -61,11 +61,11 @@ export default {
           },
           body: JSON.stringify(events),
         }),
-        fetch(Resource.InferenceEventLakeIngest.url, {
+        fetch(Resource.LakeIngest.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${Resource.InferenceEventLakeIngest.secret}`,
+            Authorization: `Bearer ${Resource.LakeIngest.secret}`,
           },
           body: JSON.stringify({ events: events.map((event) => toLakeEvent(event.time, event.data)) }),
         }),
@@ -90,6 +90,9 @@ function toLakeEvent(time: string, data: MetricData) {
   const source = string(data, "source")
 
   return {
+    _lake_database: Resource.InferenceEventLake.database,
+    _lake_table: Resource.InferenceEventLake.table,
+    _lake_operation: "insert",
     event_timestamp: time,
     event_date: time.slice(0, 10),
     event_type: string(data, "event_type"),

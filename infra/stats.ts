@@ -1,10 +1,87 @@
-import { inferenceEventLake, inferenceEventLakeQueryPermissions, lakeCluster } from "./lake"
+import { lakeAthenaWorkgroup, lakeCatalog, lakeCluster, lakeQueryPermissions, lakeRegion, tableBucket } from "./lake"
 
 const domain = (() => {
   if ($app.stage === "production") return "stats.opencode.ai"
   if ($app.stage === "dev") return "stats.dev.opencode.ai"
   return `stats.${$app.stage}.dev.opencode.ai`
 })()
+
+////////////////
+// LAKE
+////////////////
+
+const inferenceNamespace = new aws.s3tables.Namespace("LakeInferenceNamespace", {
+  namespace: "inference",
+  tableBucketArn: tableBucket.arn,
+})
+
+const inferenceEventTable = new aws.s3tables.Table("LakeInferenceEventTable", {
+  name: "event",
+  namespace: inferenceNamespace.namespace,
+  tableBucketArn: inferenceNamespace.tableBucketArn,
+  format: "ICEBERG",
+  metadata: {
+    iceberg: {
+      schema: {
+        fields: [
+          { name: "event_timestamp", type: "string", required: false },
+          { name: "event_date", type: "string", required: false },
+          { name: "event_type", type: "string", required: false },
+          { name: "dataset", type: "string", required: false },
+          { name: "client", type: "string", required: false },
+          { name: "source", type: "string", required: false },
+          { name: "tier", type: "string", required: false },
+          { name: "provider", type: "string", required: false },
+          { name: "provider_model", type: "string", required: false },
+          { name: "model", type: "string", required: false },
+          { name: "session", type: "string", required: false },
+          { name: "request", type: "string", required: false },
+          { name: "user_agent", type: "string", required: false },
+          { name: "ip", type: "string", required: false },
+          { name: "status", type: "int", required: false },
+          { name: "is_stream", type: "boolean", required: false },
+          { name: "duration_ms", type: "long", required: false },
+          { name: "ttfb_ms", type: "long", required: false },
+          { name: "request_length", type: "long", required: false },
+          { name: "response_length", type: "long", required: false },
+          { name: "timestamp_first_byte", type: "long", required: false },
+          { name: "timestamp_last_byte", type: "long", required: false },
+          { name: "tokens_input", type: "long", required: false },
+          { name: "tokens_output", type: "long", required: false },
+          { name: "tokens_reasoning", type: "long", required: false },
+          { name: "tokens_cache_read", type: "long", required: false },
+          { name: "tokens_cache_write_5m", type: "long", required: false },
+          { name: "tokens_cache_write_1h", type: "long", required: false },
+          { name: "tokens_total", type: "long", required: false },
+          { name: "cost_input_microcents", type: "long", required: false },
+          { name: "cost_output_microcents", type: "long", required: false },
+          { name: "cost_cache_read_microcents", type: "long", required: false },
+          { name: "cost_cache_write_microcents", type: "long", required: false },
+          { name: "cost_total_microcents", type: "long", required: false },
+          { name: "output_tps", type: "double", required: false },
+          { name: "cf_continent", type: "string", required: false },
+          { name: "cf_country", type: "string", required: false },
+          { name: "cf_city", type: "string", required: false },
+          { name: "cf_region", type: "string", required: false },
+          { name: "cf_latitude", type: "double", required: false },
+          { name: "cf_longitude", type: "double", required: false },
+          { name: "cf_timezone", type: "string", required: false },
+        ],
+      },
+    },
+  },
+})
+
+export const inferenceEventLake = new sst.Linkable("InferenceEventLake", {
+  properties: {
+    region: lakeRegion,
+    catalog: lakeCatalog,
+    database: inferenceNamespace.namespace,
+    table: inferenceEventTable.name,
+    tableBucket: tableBucket.name,
+    workgroup: lakeAthenaWorkgroup.name,
+  },
+})
 
 ////////////////
 // DATABASE
@@ -101,7 +178,7 @@ export const statSync = new sst.aws.Service("StatsSyncService", {
   },
   command: ["bun", "src/stat-sync.ts"],
   link: [database, inferenceEventLake, statsSyncConfig],
-  permissions: inferenceEventLakeQueryPermissions,
+  permissions: lakeQueryPermissions,
   scaling: {
     min: 1,
     max: 1,

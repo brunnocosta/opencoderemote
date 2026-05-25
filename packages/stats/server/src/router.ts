@@ -48,7 +48,7 @@ const ingest = (ingestService: Ingest.Service) => Effect.gen(function* () {
 
 function isAuthorized(headers: Record<string, string | undefined>) {
   const actual = Buffer.from(headers.authorization ?? headers.Authorization ?? "")
-  const expected = Buffer.from(`Bearer ${Resource.InferenceEventLakeIngestConfig.secret}`)
+  const expected = Buffer.from(`Bearer ${Resource.LakeIngestConfig.secret}`)
   if (actual.length !== expected.length) return false
   return timingSafeEqual(actual, expected)
 }

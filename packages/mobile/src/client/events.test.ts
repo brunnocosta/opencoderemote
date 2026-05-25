@@ -26,15 +26,12 @@ describe("getReconnectDelay", () => {
 })
 
 describe("createEventRequest", () => {
-  test("builds React Native fetch input and init", () => {
-    expect(createEventRequest({ url: " http://localhost:4096/ ", password: "secret" })).toEqual({
-      url: "http://localhost:4096/event",
-      init: {
-        headers: {
-          accept: "text/event-stream",
-          Authorization: "Basic b3BlbmNvZGU6c2VjcmV0",
-        },
-      },
-    })
+  test("builds event stream request", () => {
+    const request = createEventRequest({ url: " http://localhost:4096/ ", password: "secret" })
+
+    expect(request).toBeInstanceOf(Request)
+    expect(request.url).toBe("http://localhost:4096/event")
+    expect(request.headers.get("accept")).toBe("text/event-stream")
+    expect(request.headers.get("Authorization")).toBe("Basic b3BlbmNvZGU6c2VjcmV0")
   })
 })

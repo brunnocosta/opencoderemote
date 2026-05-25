@@ -31,13 +31,10 @@ export function getReconnectDelay(attempt: number) {
 }
 
 export function createEventRequest(connection: Connection, path = "/event") {
-  return {
-    url: `${normalizeServerUrl(connection.url)}${path}`,
-    init: {
-      headers: {
-        accept: "text/event-stream",
-        ...buildAuthHeaders(connection),
-      },
+  return new Request(`${normalizeServerUrl(connection.url)}${path}`, {
+    headers: {
+      accept: "text/event-stream",
+      ...buildAuthHeaders(connection),
     },
-  }
+  })
 }

@@ -45,6 +45,22 @@ export function createEventRequest(connection: Connection, path = "/event") {
   })
 }
 
+export async function streamEvents(connection: Connection, onMessage: (message: SseMessage) => void, signal?: AbortSignal, fetcher = fetch) {
+  const response = await fetcher(createEventRequest(connection, "/event"), { signal })
+  if (!response.ok) throw new Error(`GET /event failed with ${response.status}`)
+  if (!response.body) return
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  const parser = createSseParser()
+
+  while (!signal?.aborted) {
+    const chunk = await reader.read()
+    if (chunk.done) return
+    for (const message of parser.push(decoder.decode(chunk.value, { stream: true }))) onMessage(message)
+  }
+}
+
 function parseSseBlock(block: string): SseMessage | undefined {
   const lines = block.split(/\r\n|\r|\n/)
   if (lines.every((line) => line === "")) return undefined

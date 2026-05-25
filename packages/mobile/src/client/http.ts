@@ -33,7 +33,7 @@ export function createOpencodeHttpClient(connection: Connection, fetcher: FetchL
     listFiles: (path = ".") => request("GET", `/file?path=${encodeURIComponent(path)}`),
     readFile: (path) => request("GET", `/file/content?path=${encodeURIComponent(path)}`),
     getDiff: (sessionID) => request("GET", `/session/${encodeURIComponent(sessionID)}/diff`),
-    respondPermission: (sessionID, permissionID, response) =>
-      request("POST", `/session/${encodeURIComponent(sessionID)}/permissions/${encodeURIComponent(permissionID)}`, { response }),
+    respondPermission: (_sessionID, permissionID, response) =>
+      request("POST", `/permission/${encodeURIComponent(permissionID)}/reply`, { reply: response }),
   }
 }

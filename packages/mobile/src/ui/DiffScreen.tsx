@@ -21,14 +21,14 @@ export function DiffScreen(props: { api: OpencodeApi; sessionID?: string; onBack
         <Text style={{ color: colors.text, fontWeight: "800" }}>Diff</Text>
       </View>
       <FlatList
-      data={diffs}
-      keyExtractor={(item) => item.file}
-      renderItem={({ item }) => (
-        <View style={{ padding: spacing.md, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
-          <Text style={{ color: colors.text, fontWeight: "800" }}>{item.file}</Text>
-          <Text style={{ color: colors.muted }}>+{item.additions} -{item.deletions}</Text>
-        </View>
-      )}
+        data={diffs}
+        keyExtractor={(item) => item.file}
+        renderItem={({ item }) => (
+          <View style={{ padding: spacing.md, borderBottomColor: colors.border, borderBottomWidth: 1 }}>
+            <Text style={{ color: colors.text, fontWeight: "800" }}>{item.file}</Text>
+            <Text style={{ color: colors.muted }}>+{item.additions} -{item.deletions}</Text>
+          </View>
+        )}
       />
     </View>
   )

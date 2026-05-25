@@ -51,7 +51,7 @@ describe("createOpencodeHttpClient", () => {
     expect(requests[0].init?.body).toBe(JSON.stringify({ parts: [{ type: "text", text: "hello" }] }))
   })
 
-  test("sends permission response values", async () => {
+  test("sends permission response to current reply endpoint", async () => {
     const requests: Array<{ input: string; init?: RequestInit }> = []
     const client = createOpencodeHttpClient({ url: "http://localhost:4096" }, async (input, init) => {
       requests.push({ input, init })
@@ -59,8 +59,8 @@ describe("createOpencodeHttpClient", () => {
     })
 
     expect(await client.respondPermission("session/id", "permission/id", "always")).toBe(true)
-    expect(requests[0].input).toBe("http://localhost:4096/session/session%2Fid/permissions/permission%2Fid")
-    expect(requests[0].init?.body).toBe(JSON.stringify({ response: "always" }))
+    expect(requests[0].input).toBe("http://localhost:4096/permission/permission%2Fid/reply")
+    expect(requests[0].init?.body).toBe(JSON.stringify({ reply: "always" }))
   })
 
   test("throws status error", async () => {

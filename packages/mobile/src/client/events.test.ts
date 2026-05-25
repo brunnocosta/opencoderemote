@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createEventRequest, createSseParser, getReconnectDelay, parseSseChunk } from "./events"
+import { createEventRequest, createSseParser, getReconnectDelay, parseSseChunk, streamEvents } from "./events"
 
 describe("parseSseChunk", () => {
   test("parses event and json data", () => {
@@ -61,5 +61,21 @@ describe("createEventRequest", () => {
     expect(request.url).toBe("http://localhost:4096/event")
     expect(request.headers.get("accept")).toBe("text/event-stream")
     expect(request.headers.get("Authorization")).toBe("Basic b3BlbmNvZGU6c2VjcmV0")
+  })
+})
+
+describe("streamEvents", () => {
+  test("parses streamed chunks", async () => {
+    const messages: unknown[] = []
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('event: message\ndata: {"type":"permission.asked"}\n\n'))
+        controller.close()
+      },
+    })
+
+    await streamEvents({ url: "http://localhost:4096" }, (message) => messages.push(message), undefined, async () => new Response(stream))
+
+    expect(messages).toEqual([{ event: "message", data: { type: "permission.asked" } }])
   })
 })

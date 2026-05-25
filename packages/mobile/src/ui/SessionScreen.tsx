@@ -4,7 +4,7 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native"
 import type { OpencodeApi, SessionMessage } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onBack(): void; onClearSession(): void; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
+export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; revision?: number; onBack(): void; onClearSession(): void; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [messages, setMessages] = useState<SessionMessage[]>([])
   const [text, setText] = useState("")
@@ -16,7 +16,7 @@ export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onB
       setSessions([])
       setError(error instanceof Error ? error.message : String(error))
     })
-  }, [props.api])
+  }, [props.api, props.revision])
 
   useEffect(() => {
     if (!props.sessionID) return
@@ -25,7 +25,7 @@ export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onB
       setMessages([])
       setError(error instanceof Error ? error.message : String(error))
     })
-  }, [props.api, props.sessionID])
+  }, [props.api, props.sessionID, props.revision])
 
   async function create() {
     try {

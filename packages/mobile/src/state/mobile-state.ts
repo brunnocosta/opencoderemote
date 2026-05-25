@@ -27,7 +27,14 @@ export function reduceMobileState(state: MobileState, action: MobileAction): Mob
   if (action.type === "connection.failed") return { ...state, error: action.error }
   if (action.type === "session.selected") return { ...state, selectedSessionID: action.sessionID }
   if (action.type === "messages.loaded") return { ...state, messages: { ...state.messages, [action.sessionID]: action.messages } }
-  if (action.type === "permission.requested") return { ...state, permissions: [...state.permissions, action.request] }
+  if (action.type === "permission.requested") {
+    return {
+      ...state,
+      permissions: state.permissions.some((item) => item.permissionID === action.request.permissionID)
+        ? state.permissions.map((item) => (item.permissionID === action.request.permissionID ? action.request : item))
+        : [...state.permissions, action.request],
+    }
+  }
   if (action.type === "permission.responded") {
     return { ...state, permissions: state.permissions.filter((item) => item.permissionID !== action.permissionID) }
   }

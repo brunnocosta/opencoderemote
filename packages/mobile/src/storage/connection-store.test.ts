@@ -47,4 +47,22 @@ describe("createConnectionStore", () => {
 
     expect(await store.load()).toBeUndefined()
   })
+
+  test.each([
+    "null",
+    "[]",
+    JSON.stringify({}),
+    JSON.stringify({ url: 4096 }),
+    JSON.stringify({ url: "http://localhost:4096", username: 1 }),
+    JSON.stringify({ url: "http://localhost:4096", password: 1 }),
+    JSON.stringify({ url: "http://localhost:4096", trustedLocal: "yes" }),
+  ])("returns undefined for invalid saved connection %s", async (value) => {
+    const store = createConnectionStore({
+      getItemAsync: async () => value,
+      setItemAsync: async () => undefined,
+      deleteItemAsync: async () => undefined,
+    })
+
+    expect(await store.load()).toBeUndefined()
+  })
 })

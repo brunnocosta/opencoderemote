@@ -16,7 +16,9 @@ export function createConnectionStore(storage: SecureStorage = SecureStore) {
       if (!value) return
 
       try {
-        return JSON.parse(value) as Connection
+        const connection = JSON.parse(value) as unknown
+        if (!isConnection(connection)) return
+        return connection
       } catch {
         return
       }
@@ -28,4 +30,16 @@ export function createConnectionStore(storage: SecureStorage = SecureStore) {
       return storage.deleteItemAsync(key)
     },
   }
+}
+
+function isConnection(value: unknown): value is Connection {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+
+  const connection = value as Record<string, unknown>
+  return (
+    typeof connection.url === "string" &&
+    (connection.username === undefined || typeof connection.username === "string") &&
+    (connection.password === undefined || typeof connection.password === "string") &&
+    (connection.trustedLocal === undefined || typeof connection.trustedLocal === "boolean")
+  )
 }

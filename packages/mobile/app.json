@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "opencode",
+    "slug": "opencode-mobile",
+    "scheme": "opencode-mobile",
+    "version": "1.15.10",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.opencode.mobile"
+    },
+    "android": {
+      "package": "ai.opencode.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b0f14"
+      }
+    },
+    "plugins": ["expo-secure-store"]
+  }
+}

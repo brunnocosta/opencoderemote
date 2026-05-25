@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
-import { FlatList, Text, View } from "react-native"
+import { FlatList, Pressable, Text, View } from "react-native"
 import type { FileDiff } from "@opencode-ai/sdk/client"
 import type { OpencodeApi } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function DiffScreen(props: { api: OpencodeApi; sessionID?: string }) {
+export function DiffScreen(props: { api: OpencodeApi; sessionID?: string; onBack(): void }) {
   const [diffs, setDiffs] = useState<FileDiff[]>([])
 
   useEffect(() => {
@@ -13,8 +13,14 @@ export function DiffScreen(props: { api: OpencodeApi; sessionID?: string }) {
   }, [props.api, props.sessionID])
 
   return (
-    <FlatList
-      style={{ flex: 1, backgroundColor: colors.background }}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", padding: spacing.md }}>
+        <Pressable onPress={props.onBack}>
+          <Text style={{ color: colors.accent }}>Back</Text>
+        </Pressable>
+        <Text style={{ color: colors.text, fontWeight: "800" }}>Diff</Text>
+      </View>
+      <FlatList
       data={diffs}
       keyExtractor={(item) => item.file}
       renderItem={({ item }) => (
@@ -23,6 +29,7 @@ export function DiffScreen(props: { api: OpencodeApi; sessionID?: string }) {
           <Text style={{ color: colors.muted }}>+{item.additions} -{item.deletions}</Text>
         </View>
       )}
-    />
+      />
+    </View>
   )
 }

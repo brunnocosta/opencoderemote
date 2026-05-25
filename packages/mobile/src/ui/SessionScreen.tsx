@@ -4,10 +4,11 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native"
 import type { OpencodeApi, SessionMessage } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
+export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onBack(): void; onSelectSession(sessionID: string): void; onOpenDiff(): void }) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [messages, setMessages] = useState<SessionMessage[]>([])
   const [text, setText] = useState("")
+  const [error, setError] = useState<string | undefined>()
 
   useEffect(() => {
     props.api.listSessions().then(setSessions).catch(() => setSessions([]))
@@ -19,27 +20,41 @@ export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onS
   }, [props.api, props.sessionID])
 
   async function create() {
-    const session = await props.api.createSession()
-    setSessions([session, ...sessions])
-    props.onSelectSession(session.id)
+    try {
+      setError(undefined)
+      const session = await props.api.createSession()
+      setSessions([session, ...sessions])
+      props.onSelectSession(session.id)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error))
+    }
   }
 
   async function send() {
     if (!props.sessionID || !text.trim()) return
-    await props.api.sendPrompt(props.sessionID, text.trim())
-    setText("")
-    setMessages(await props.api.listMessages(props.sessionID))
+    try {
+      setError(undefined)
+      await props.api.sendPrompt(props.sessionID, text.trim())
+      setText("")
+      setMessages(await props.api.listMessages(props.sessionID))
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error))
+    }
   }
 
   if (!props.sessionID) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", padding: spacing.md }}>
+          <Pressable onPress={props.onBack}>
+            <Text style={{ color: colors.accent }}>Back</Text>
+          </Pressable>
           <Text style={{ color: colors.text, fontWeight: "800" }}>Sessions</Text>
           <Pressable onPress={create}>
             <Text style={{ color: colors.accent }}>New</Text>
           </Pressable>
         </View>
+        {error ? <Text style={{ color: colors.danger, paddingHorizontal: spacing.md }}>{error}</Text> : null}
         <FlatList
           data={sessions}
           keyExtractor={(item) => item.id}
@@ -56,11 +71,15 @@ export function SessionScreen(props: { api: OpencodeApi; sessionID?: string; onS
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", padding: spacing.md }}>
+        <Pressable onPress={props.onBack}>
+          <Text style={{ color: colors.accent }}>Back</Text>
+        </Pressable>
         <Text style={{ color: colors.text, fontWeight: "800" }}>{props.sessionID}</Text>
         <Pressable onPress={props.onOpenDiff}>
           <Text style={{ color: colors.accent }}>Diff</Text>
         </Pressable>
       </View>
+      {error ? <Text style={{ color: colors.danger, paddingHorizontal: spacing.md }}>{error}</Text> : null}
       <FlatList
         data={messages}
         keyExtractor={(item) => item.info.id}

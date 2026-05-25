@@ -1,19 +1,63 @@
+import type { FileContent, FileNode } from "@opencode-ai/sdk/client"
 import { useEffect, useState } from "react"
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native"
-import type { FileContent, FileNode } from "@opencode-ai/sdk/client"
 import type { OpencodeApi } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function FileScreen(props: { api: OpencodeApi }) {
+export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
+  const [path, setPath] = useState(".")
   const [nodes, setNodes] = useState<FileNode[]>([])
   const [content, setContent] = useState<FileContent | undefined>()
+  const [error, setError] = useState<string | undefined>()
 
   useEffect(() => {
-    props.api.listFiles(".").then(setNodes).catch(() => setNodes([]))
-  }, [props.api])
+    setContent(undefined)
+    setError(undefined)
+    props.api.listFiles(path).then(setNodes).catch((error) => {
+      setNodes([])
+      setError(error instanceof Error ? error.message : String(error))
+    })
+  }, [props.api, path])
+
+  async function open(node: FileNode) {
+    setError(undefined)
+    if (node.type === "directory") {
+      setPath(node.path)
+      return
+    }
+    try {
+      setContent(await props.api.readFile(node.path))
+    } catch (fileError) {
+      try {
+        setNodes(await props.api.listFiles(node.path))
+        setPath(node.path)
+      } catch {
+        setError(fileError instanceof Error ? fileError.message : String(fileError))
+      }
+    }
+  }
+
+  function back() {
+    if (content) {
+      setContent(undefined)
+      return
+    }
+    if (path !== ".") {
+      setPath(path.split("/").slice(0, -1).join("/") || ".")
+      return
+    }
+    props.onBack()
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", padding: spacing.md }}>
+        <Pressable onPress={back}>
+          <Text style={{ color: colors.accent }}>Back</Text>
+        </Pressable>
+        <Text style={{ color: colors.text, fontWeight: "800" }}>{content ? "File" : path}</Text>
+      </View>
+      {error ? <Text style={{ color: colors.danger, paddingHorizontal: spacing.md }}>{error}</Text> : null}
       {content ? (
         <ScrollView>
           <Text style={{ color: colors.text, padding: spacing.md, fontFamily: "monospace" }}>{String(content.content || "")}</Text>
@@ -23,8 +67,8 @@ export function FileScreen(props: { api: OpencodeApi }) {
           data={nodes}
           keyExtractor={(item, index) => `${item.path}-${index}`}
           renderItem={({ item }) => (
-            <Pressable onPress={() => props.api.readFile(item.path).then(setContent).catch(() => undefined)}>
-              <Text style={{ color: colors.text, padding: spacing.md }}>{item.path}</Text>
+            <Pressable onPress={() => open(item)}>
+              <Text style={{ color: colors.text, padding: spacing.md }}>{item.type === "directory" ? "[dir] " : ""}{item.path}</Text>
             </Pressable>
           )}
         />

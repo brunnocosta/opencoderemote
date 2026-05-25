@@ -22,7 +22,7 @@ export type SessionMessage = {
   parts: Array<{ id?: string; type: string; text?: string; [key: string]: unknown }>
 }
 
-export type PermissionDecision = "allow" | "deny"
+export type PermissionDecision = "once" | "always" | "reject"
 
 export type PermissionRequest = {
   sessionID: string

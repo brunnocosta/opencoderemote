@@ -1,21 +1,21 @@
 import { buildAuthHeaders, normalizeServerUrl } from "./auth"
 import type { Connection, OpencodeApi } from "./types"
 
-export function createOpencodeHttpClient(connection: Connection, fetcher: typeof fetch = fetch): OpencodeApi {
+type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
+
+export function createOpencodeHttpClient(connection: Connection, fetcher: FetchLike = fetch): OpencodeApi {
   const base = normalizeServerUrl(connection.url)
 
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const response = await fetcher(
-      new Request(`${base}${path}`, {
-        method,
-        headers: {
-          accept: "application/json",
-          ...(body === undefined ? {} : { "content-type": "application/json" }),
-          ...buildAuthHeaders(connection),
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      }),
-    )
+    const response = await fetcher(`${base}${path}`, {
+      method,
+      headers: {
+        accept: "application/json",
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
+        ...buildAuthHeaders(connection),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
     if (!response.ok) throw new Error(`${method} ${path} failed with ${response.status}`)
     if (response.status === 204) return undefined as T
     return response.json() as Promise<T>

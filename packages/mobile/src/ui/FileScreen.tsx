@@ -1,4 +1,5 @@
 import type { FileContent, FileNode } from "@opencode-ai/sdk/client"
+import { getParentPath, isDirectoryNode } from "@opencode-ai/app-core/workflow/file"
 import { useEffect, useState } from "react"
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native"
 import type { OpencodeApi } from "../client/types"
@@ -21,7 +22,7 @@ export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
 
   async function open(node: FileNode) {
     setError(undefined)
-    if (node.type === "directory") {
+    if (isDirectoryNode(node)) {
       setPath(node.path)
       return
     }
@@ -43,7 +44,7 @@ export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
       return
     }
     if (path !== ".") {
-      setPath(parentPath(path))
+      setPath(getParentPath(path))
       return
     }
     props.onBack()
@@ -68,17 +69,11 @@ export function FileScreen(props: { api: OpencodeApi; onBack(): void }) {
           keyExtractor={(item, index) => `${item.path}-${index}`}
           renderItem={({ item }) => (
             <Pressable onPress={() => open(item)}>
-              <Text style={{ color: colors.text, padding: spacing.md }}>{item.type === "directory" ? "[dir] " : ""}{item.path}</Text>
+              <Text style={{ color: colors.text, padding: spacing.md }}>{isDirectoryNode(item) ? "[dir] " : ""}{item.path}</Text>
             </Pressable>
           )}
         />
       )}
     </View>
   )
-}
-
-function parentPath(path: string) {
-  const index = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
-  if (index <= 0) return "."
-  return path.slice(0, index)
 }

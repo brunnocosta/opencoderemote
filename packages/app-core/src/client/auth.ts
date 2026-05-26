@@ -15,6 +15,16 @@ export function buildAuthHeaders(input: { username?: string; password?: string }
 }
 
 function encodeBasicAuth(username: string, password: string) {
-  if (typeof btoa === "function") return btoa(`${username}:${password}`)
-  return Buffer.from(`${username}:${password}`, "utf8").toString("base64")
+  const value = `${username}:${password}`
+  if (typeof btoa === "function") return btoa(value)
+  if (typeof Buffer !== "undefined") return Buffer.from(value, "utf8").toString("base64")
+  const bytes = typeof TextEncoder === "undefined" ? Array.from(unescape(encodeURIComponent(value)), (char) => char.charCodeAt(0)) : Array.from(new TextEncoder().encode(value))
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  return Array.from({ length: Math.ceil(bytes.length / 3) }, (_, index) => {
+    const first = bytes[index * 3]
+    const second = bytes[index * 3 + 1]
+    const third = bytes[index * 3 + 2]
+    const encoded = (first << 16) | ((second ?? 0) << 8) | (third ?? 0)
+    return `${chars[(encoded >> 18) & 63]}${chars[(encoded >> 12) & 63]}${second === undefined ? "=" : chars[(encoded >> 6) & 63]}${third === undefined ? "=" : chars[encoded & 63]}`
+  }).join("")
 }

@@ -1,0 +1,27 @@
+{
+  "name": "@opencode-ai/app-core",
+  "version": "1.15.10",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/http.ts",
+    "./events": "./src/client/events.ts",
+    "./workflow/session": "./src/workflow/session.ts",
+    "./workflow/file": "./src/workflow/file.ts",
+    "./workflow/diff": "./src/workflow/diff.ts",
+    "./workflow/permission": "./src/workflow/permission.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test src"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:"
+  }
+}

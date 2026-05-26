@@ -108,7 +108,7 @@ function handleEvent(message: SseMessage, dispatch: Dispatch<MobileAction>, api:
   const permission = toPermissionRequest(properties)
 
   if (type === "permission.asked" && permission) dispatch({ type: "permission.requested", request: permission })
-  if (type === "permission.replied" && typeof properties.requestID === "string") dispatch({ type: "permission.responded", permissionID: properties.requestID })
+  if (type === "permission.replied" && typeof properties.requestID === "string") dispatch({ type: "permission.responded", requestID: properties.requestID })
   if (type.startsWith("session.") || type.startsWith("message.")) {
     refresh((value) => value + 1)
     refreshSelectedSession(api, dispatch, selectedSessionID)

@@ -20,6 +20,24 @@ describe("parseSseChunk", () => {
     expect(parser.push('data: {"type"')).toEqual([])
     expect(parser.push(':"done"}\n\n')).toEqual([{ event: "message", data: { type: "done" } }])
   })
+
+  test("flush processes remaining buffer", () => {
+    const parser = createSseParser()
+    expect(parser.push('data: {"type":"incomplete"}')).toEqual([])
+    expect(parser.flush()).toEqual([{ event: "message", data: { type: "incomplete" } }])
+  })
+
+  test("flush clears buffer", () => {
+    const parser = createSseParser()
+    parser.push('data: test')
+    parser.flush()
+    expect(parser.flush()).toEqual([])
+  })
+
+  test("flush returns empty array when buffer is empty", () => {
+    const parser = createSseParser()
+    expect(parser.flush()).toEqual([])
+  })
 })
 
 describe("createEventRequest", () => {

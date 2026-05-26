@@ -21,6 +21,13 @@ export class SseParser {
       if (message) messages.push(message)
     }
   }
+
+  flush(): SseMessage[] {
+    if (!this.buffer) return []
+    const message = parseSseBlock(this.buffer)
+    this.buffer = ""
+    return message ? [message] : []
+  }
 }
 
 export function createSseParser() {

@@ -13,7 +13,10 @@ export async function streamEvents(connection: Connection, onMessage: (message: 
 
   while (!signal?.aborted) {
     const chunk = await reader.read()
-    if (chunk.done) return
+    if (chunk.done) {
+      for (const message of parser.flush()) onMessage(message)
+      return
+    }
     for (const message of parser.push(decoder.decode(chunk.value, { stream: true }))) onMessage(message)
   }
 }

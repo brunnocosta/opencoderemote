@@ -26,7 +26,7 @@ describe("reduceMobileState", () => {
   test("tracks pending permission", () => {
     const state = reduceMobileState(initialMobileState, {
       type: "permission.requested",
-      request: { sessionID: "ses_1", permissionID: "perm_1", title: "Run command" },
+      request: { sessionID: "ses_1", requestID: "perm_1", title: "Run command" },
     })
     expect(state.permissions).toHaveLength(1)
   })
@@ -34,22 +34,22 @@ describe("reduceMobileState", () => {
   test("replaces duplicate permission request", () => {
     const requested = reduceMobileState(initialMobileState, {
       type: "permission.requested",
-      request: { sessionID: "ses_1", permissionID: "perm_1", title: "Run command" },
+      request: { sessionID: "ses_1", requestID: "perm_1", title: "Run command" },
     })
     const replaced = reduceMobileState(requested, {
       type: "permission.requested",
-      request: { sessionID: "ses_2", permissionID: "perm_1", title: "Read file" },
+      request: { sessionID: "ses_2", requestID: "perm_1", title: "Read file" },
     })
 
-    expect(replaced.permissions).toEqual([{ sessionID: "ses_2", permissionID: "perm_1", title: "Read file" }])
+    expect(replaced.permissions).toEqual([{ sessionID: "ses_2", requestID: "perm_1", title: "Read file" }])
   })
 
   test("keeps state immutable when replacing permission request", () => {
-    const permission = { sessionID: "ses_1", permissionID: "perm_1", title: "Run command" }
+    const permission = { sessionID: "ses_1", requestID: "perm_1", title: "Run command" }
     const state = { ...initialMobileState, permissions: [permission] }
     const replaced = reduceMobileState(state, {
       type: "permission.requested",
-      request: { sessionID: "ses_2", permissionID: "perm_1", title: "Read file" },
+      request: { sessionID: "ses_2", requestID: "perm_1", title: "Read file" },
     })
 
     expect(replaced).not.toBe(state)
@@ -59,9 +59,9 @@ describe("reduceMobileState", () => {
   })
 
   test("preserves unrelated permission references when replacing permission request", () => {
-    const permission = { sessionID: "ses_1", permissionID: "perm_1", title: "Run command" }
-    const replacement = { sessionID: "ses_2", permissionID: "perm_2", title: "Read file" }
-    const state = { ...initialMobileState, permissions: [permission, { sessionID: "ses_old", permissionID: "perm_2", title: "Old" }] }
+    const permission = { sessionID: "ses_1", requestID: "perm_1", title: "Run command" }
+    const replacement = { sessionID: "ses_2", requestID: "perm_2", title: "Read file" }
+    const state = { ...initialMobileState, permissions: [permission, { sessionID: "ses_old", requestID: "perm_2", title: "Old" }] }
     const replaced = reduceMobileState(state, { type: "permission.requested", request: replacement })
 
     expect(replaced.permissions).toEqual([permission, replacement])
@@ -72,9 +72,9 @@ describe("reduceMobileState", () => {
   test("removes permission response", () => {
     const requested = reduceMobileState(initialMobileState, {
       type: "permission.requested",
-      request: { sessionID: "ses_1", permissionID: "perm_1", title: "Run command" },
+      request: { sessionID: "ses_1", requestID: "perm_1", title: "Run command" },
     })
-    const responded = reduceMobileState(requested, { type: "permission.responded", permissionID: "perm_1" })
+    const responded = reduceMobileState(requested, { type: "permission.responded", requestID: "perm_1" })
     expect(responded.permissions).toEqual([])
   })
 })

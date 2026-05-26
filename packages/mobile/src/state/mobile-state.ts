@@ -16,7 +16,7 @@ export type MobileAction =
   | { type: "session.cleared" }
   | { type: "messages.loaded"; sessionID: string; messages: SessionMessage[] }
   | { type: "permission.requested"; request: PermissionRequest }
-  | { type: "permission.responded"; permissionID: string }
+  | { type: "permission.responded"; requestID: string }
 
 export const initialMobileState: MobileState = {
   messages: {},
@@ -32,13 +32,13 @@ export function reduceMobileState(state: MobileState, action: MobileAction): Mob
   if (action.type === "permission.requested") {
     return {
       ...state,
-      permissions: state.permissions.some((item) => item.permissionID === action.request.permissionID)
-        ? state.permissions.map((item) => (item.permissionID === action.request.permissionID ? action.request : item))
+      permissions: state.permissions.some((item) => item.requestID === action.request.requestID)
+        ? state.permissions.map((item) => (item.requestID === action.request.requestID ? action.request : item))
         : [...state.permissions, action.request],
     }
   }
   if (action.type === "permission.responded") {
-    return { ...state, permissions: state.permissions.filter((item) => item.permissionID !== action.permissionID) }
+    return { ...state, permissions: state.permissions.filter((item) => item.requestID !== action.requestID) }
   }
   return state
 }

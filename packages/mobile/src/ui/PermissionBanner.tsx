@@ -1,8 +1,8 @@
 import { Pressable, Text, View } from "react-native"
-import type { PermissionDecision, PermissionRequest } from "../client/types"
+import type { PermissionReply, PermissionRequest } from "../client/types"
 import { colors, spacing } from "./theme"
 
-export function PermissionBanner(props: { request?: PermissionRequest; onRespond(response: PermissionDecision): void }) {
+export function PermissionBanner(props: { request?: PermissionRequest; onRespond(response: PermissionReply): void }) {
   if (!props.request) return null
   return (
     <View style={{ padding: spacing.md, backgroundColor: colors.panel, borderBottomColor: colors.border, borderBottomWidth: 1 }}>

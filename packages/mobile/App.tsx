@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState, type Dispatch, type S
 import { Pressable, SafeAreaView, StatusBar, Text, View } from "react-native"
 import { streamEvents, type SseMessage } from "./src/client/events"
 import { createOpencodeHttpClient } from "./src/client/http"
-import type { Connection, PermissionDecision, PermissionRequest } from "./src/client/types"
+import type { Connection, PermissionReply, PermissionRequest } from "./src/client/types"
 import { createConnectionStore } from "./src/storage/connection-store"
 import { initialMobileState, reduceMobileState, type MobileAction } from "./src/state/mobile-state"
 import { ConnectionScreen } from "./src/ui/ConnectionScreen"
@@ -68,10 +68,10 @@ export default function App() {
     }
   }
 
-  async function respond(response: PermissionDecision) {
+  async function respond(response: PermissionReply) {
     if (!api || !state.permissions[0]) return
-    await api.respondPermission(state.permissions[0].sessionID, state.permissions[0].permissionID, response)
-    dispatch({ type: "permission.responded", permissionID: state.permissions[0].permissionID })
+    await api.respondPermission(state.permissions[0].requestID, response)
+    dispatch({ type: "permission.responded", requestID: state.permissions[0].requestID })
   }
 
   return (
@@ -116,12 +116,12 @@ function handleEvent(message: SseMessage, dispatch: Dispatch<MobileAction>, api:
 }
 
 function toPermissionRequest(value: Record<string, unknown>): PermissionRequest | undefined {
-  const permissionID = stringValue(value.requestID) ?? stringValue(value.id) ?? stringValue(value.permissionID)
+  const requestID = stringValue(value.requestID) ?? stringValue(value.id) ?? stringValue(value.permissionID)
   const sessionID = stringValue(value.sessionID)
-  if (!permissionID || !sessionID) return
+  if (!requestID || !sessionID) return
   return {
     sessionID,
-    permissionID,
+    requestID,
     title: stringValue(value.title) ?? stringValue(value.permission) ?? "Permission requested",
     metadata: value.metadata,
   }

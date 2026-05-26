@@ -95,3 +95,7 @@ Start with mobile-owned client modules that overlap web workflows:
 - At least one web workflow uses `app-core` or has a documented migration seam.
 - Drift check can fail CI for direct duplicated workflow usage.
 - Sync report can be generated locally.
+
+## Implementation note
+
+Initial implementation migrates mobile client/event/helper logic first. Web adoption starts by enforcing drift visibility around `packages/app/src/pages/session` and `packages/app/src/utils`; direct web routes can remain only when documented as UI-specific or intentionally not part of `app-core` yet.

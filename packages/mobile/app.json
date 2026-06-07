@@ -8,14 +8,16 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.opencode.mobile"
+      "bundleIdentifier": "opencodeapp.web.app"
     },
     "android": {
-      "package": "ai.opencode.mobile",
+      "package": "opencodeapp.web.app",
       "adaptiveIcon": {
         "backgroundColor": "#0b0f14"
       }
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

@@ -2,7 +2,8 @@
   "extends": "@tsconfig/bun/tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "types": ["bun-types"]
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["bun"]
   },
   "include": ["App.tsx", "src/**/*.ts", "src/**/*.tsx"]
 }

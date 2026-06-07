@@ -21,7 +21,7 @@ describe("createOpencodeHttpClient", () => {
     )
 
     expect(await client.health()).toEqual({ healthy: true, version: "1.0.0" })
-    expect(requests[0].input).toBe("http://localhost:4096/global/health")
+    expect(requests[0]!.input).toBe("http://localhost:4096/global/health")
   })
 
   test("sends basic auth header", async () => {
@@ -35,7 +35,7 @@ describe("createOpencodeHttpClient", () => {
     )
 
     await client.listSessions()
-    expect(new Headers(requests[0].init?.headers).get("authorization")).toBe("Basic b3BlbmNvZGU6c2VjcmV0")
+    expect(new Headers(requests[0]!.init?.headers).get("authorization")).toBe("Basic b3BlbmNvZGU6c2VjcmV0")
   })
 
   test("posts json body", async () => {
@@ -46,9 +46,9 @@ describe("createOpencodeHttpClient", () => {
     })
 
     await client.sendPrompt("session/id", "hello")
-    expect(requests[0].input).toBe("http://localhost:4096/session/session%2Fid/prompt_async")
-    expect(new Headers(requests[0].init?.headers).get("content-type")).toBe("application/json")
-    expect(requests[0].init?.body).toBe(JSON.stringify({ parts: [{ type: "text", text: "hello" }] }))
+    expect(requests[0]!.input).toBe("http://localhost:4096/session/session%2Fid/prompt_async")
+    expect(new Headers(requests[0]!.init?.headers).get("content-type")).toBe("application/json")
+    expect(requests[0]!.init?.body).toBe(JSON.stringify({ parts: [{ type: "text", text: "hello" }] }))
   })
 
   test("sends permission response to current reply endpoint", async () => {
@@ -58,9 +58,9 @@ describe("createOpencodeHttpClient", () => {
       return jsonResponse(true)
     })
 
-    expect(await client.respondPermission("session/id", "permission/id", "always")).toBe(true)
-    expect(requests[0].input).toBe("http://localhost:4096/permission/permission%2Fid/reply")
-    expect(requests[0].init?.body).toBe(JSON.stringify({ reply: "always" }))
+    expect(await client.respondPermission("permission/id", "always")).toBe(true)
+    expect(requests[0]!.input).toBe("http://localhost:4096/permission/permission%2Fid/reply")
+    expect(requests[0]!.init?.body).toBe(JSON.stringify({ reply: "always" }))
   })
 
   test("throws status error", async () => {

@@ -1,8 +1,11 @@
-export { createEventRequest, createSseParser, getReconnectDelay, parseSseChunk } from "@opencode-ai/app-core"
-export type { SseMessage } from "@opencode-ai/app-core"
+import { createEventRequest, createSseParser } from "@opencode-ai/app-core"
+import type { SseMessage } from "@opencode-ai/app-core"
 import type { Connection } from "./types"
 
-export async function streamEvents(connection: Connection, onMessage: (message: SseMessage) => void, signal?: AbortSignal, fetcher = fetch) {
+export { createEventRequest, createSseParser, getReconnectDelay, parseSseChunk } from "@opencode-ai/app-core"
+export type { SseMessage } from "@opencode-ai/app-core"
+
+export async function streamEvents(connection: Connection, onMessage: (message: SseMessage) => void, signal?: AbortSignal, fetcher: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = fetch) {
   const response = await fetcher(createEventRequest(connection, "/event"), { signal })
   if (!response.ok) throw new Error(`GET /event failed with ${response.status}`)
   if (!response.body) return

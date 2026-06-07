@@ -36,13 +36,12 @@ export function createOpencodeHttpClient(connection: Connection, fetcher: FetchL
   const base = normalizeServerUrl(connection.url)
 
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const headers = new Headers(buildAuthHeaders(connection))
+    headers.set("accept", "application/json")
+    if (body !== undefined) headers.set("content-type", "application/json")
     const response = await fetcher(`${base}${path}`, {
       method,
-      headers: {
-        accept: "application/json",
-        ...(body === undefined ? {} : { "content-type": "application/json" }),
-        ...buildAuthHeaders(connection),
-      },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     if (!response.ok) throw new Error(`${method} ${path} failed with ${response.status}`)

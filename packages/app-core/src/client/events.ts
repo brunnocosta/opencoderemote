@@ -43,12 +43,9 @@ export function getReconnectDelay(attempt: number) {
 }
 
 export function createEventRequest(connection: Connection, path = "/event") {
-  return new Request(`${normalizeServerUrl(connection.url)}${path}`, {
-    headers: {
-      accept: "text/event-stream",
-      ...buildAuthHeaders(connection),
-    },
-  })
+  const headers = new Headers(buildAuthHeaders(connection))
+  headers.set("accept", "text/event-stream")
+  return new Request(`${normalizeServerUrl(connection.url)}${path}`, { headers })
 }
 
 function parseSseBlock(block: string): SseMessage | undefined {

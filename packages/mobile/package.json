@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "typecheck": "tsgo --noEmit",
     "test": "bun test src"
   },
@@ -15,12 +15,15 @@
     "@opencode-ai/sdk": "workspace:*",
     "expo": "54.0.0",
     "expo-secure-store": "15.0.0",
+    "expo-dev-client": "~6.0.21",
     "react": "19.0.0",
     "react-native": "0.81.0"
   },
   "devDependencies": {
+    "@types/bun": "catalog:",
     "@types/react": "19.0.0",
     "@typescript/native-preview": "catalog:",
+    "babel-preset-expo": "~54.0.0",
     "typescript": "catalog:"
   }
 }

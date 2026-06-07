@@ -56,7 +56,7 @@ describe("createConnectionStore", () => {
     JSON.stringify({ url: "http://localhost:4096", username: 1 }),
     JSON.stringify({ url: "http://localhost:4096", password: 1 }),
     JSON.stringify({ url: "http://localhost:4096", trustedLocal: "yes" }),
-  ])("returns undefined for invalid saved connection %s", async (value) => {
+  ])("returns undefined for invalid saved connection %s", async (value: string) => {
     const store = createConnectionStore({
       getItemAsync: async () => value,
       setItemAsync: async () => undefined,

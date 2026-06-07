@@ -70,6 +70,13 @@ declare global {
       updaterEnabled?: boolean
       deepLinks?: string[]
       wsl?: boolean
+      mobile?: {
+        server?: {
+          url?: string
+          username?: string
+          password?: string
+        }
+      }
     }
     api?: {
       setTitlebar?: (theme: { mode: "light" | "dark" }) => Promise<void>

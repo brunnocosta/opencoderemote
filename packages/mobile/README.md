@@ -1,6 +1,8 @@
-# opencode mobile
+# opencode Android
 
-Expo React Native client for `opencode serve`.
+Expo Android shell for the responsive opencode web app.
+
+The APK bundles the built `packages/app` UI under Android assets and loads it in a WebView. The native shell only handles the initial server connection and secure persistence; the actual opencode interface stays in `packages/app`.
 
 ## Development
 
@@ -13,20 +15,23 @@ OPENCODE_SERVER_PASSWORD=your-password opencode serve --hostname 0.0.0.0 --port 
 Start mobile app:
 
 ```bash
-bun dev
+bun android
 ```
 
 Use your machine LAN IP in the app, for example `http://192.168.1.10:4096`.
 
 Do not expose `opencode serve` directly to the public internet without HTTPS and access controls.
 
-## Shared workflows
+## Bundled web UI
 
-Mobile imports shared opencode workflow logic from `@opencode-ai/app-core`. UI and navigation stay in React Native; server route wrappers, event parsing, and cross-platform helpers belong in `app-core`.
+The `bun android` script runs Expo prebuild, then `bun run build:web-assets`, then `expo run:android`. The web asset step builds `packages/app` with relative asset paths and copies the result to:
 
-When changing session, file, diff, or permission workflows, run:
+```text
+packages/mobile/android/app/src/main/assets/opencode-web
+```
+
+When changing the app UI, make the change in `packages/app`, then rebuild mobile web assets:
 
 ```bash
-bun run check:app-core-drift
-bun run report:app-core-sync origin/dev
+bun run build:web-assets
 ```

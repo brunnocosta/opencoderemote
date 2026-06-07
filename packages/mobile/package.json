@@ -3,27 +3,29 @@
   "version": "1.15.10",
   "private": true,
   "type": "module",
+  "main": "index.ts",
   "scripts": {
+    "build:web-assets": "bun run script/build-web-assets.ts",
     "dev": "expo start",
-    "android": "expo run:android",
+    "android": "expo prebuild --platform android && bun run build:web-assets && expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsgo --noEmit",
     "test": "bun test src"
   },
   "dependencies": {
-    "@opencode-ai/app-core": "workspace:*",
-    "@opencode-ai/sdk": "workspace:*",
-    "expo": "54.0.0",
-    "expo-secure-store": "15.0.0",
+    "expo": "~54.0.34",
+    "expo-secure-store": "~15.0.8",
     "expo-dev-client": "~6.0.21",
-    "react": "19.0.0",
-    "react-native": "0.81.0"
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-webview": "13.15.0"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "@types/react": "19.0.0",
+    "@types/react": "19.1.10",
+    "eslint": "^9.0.0",
     "@typescript/native-preview": "catalog:",
     "babel-preset-expo": "~54.0.0",
-    "typescript": "catalog:"
+    "typescript": "~5.9.3"
   }
 }

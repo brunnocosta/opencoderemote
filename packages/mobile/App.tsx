@@ -1,42 +1,37 @@
-import { useEffect, useMemo, useReducer, useRef, useState, type Dispatch, type SetStateAction } from "react"
-import { Pressable, SafeAreaView, StatusBar, Text, View } from "react-native"
-import { streamEvents, type SseMessage } from "./src/client/events"
-import { createOpencodeHttpClient } from "./src/client/http"
-import type { Connection, PermissionReply, PermissionRequest } from "./src/client/types"
-import { createConnectionStore } from "./src/storage/connection-store"
-import { initialMobileState, reduceMobileState, type MobileAction } from "./src/state/mobile-state"
-import { ConnectionScreen } from "./src/ui/ConnectionScreen"
-import { DiffScreen } from "./src/ui/DiffScreen"
-import { FileScreen } from "./src/ui/FileScreen"
-import { HomeScreen } from "./src/ui/HomeScreen"
-import { PermissionBanner } from "./src/ui/PermissionBanner"
-import { SessionScreen } from "./src/ui/SessionScreen"
-import { colors, spacing } from "./src/ui/theme"
+import { useEffect, useMemo, useRef, useState, type ReactElement, type Ref } from "react"
+import { BackHandler, Linking, Pressable, SafeAreaView, StatusBar, Text, TextInput, View } from "react-native"
+import { WebView, type WebViewMessageEvent, type WebViewNavigation, type WebViewProps } from "react-native-webview"
+import { createConnectionStore } from "./src/connection-store"
+import { getConnectionValidation, normalizeConnection, type Connection } from "./src/connection"
+import { colors, spacing } from "./src/theme"
+
+const OpencodeWebView = WebView as unknown as (props: WebViewProps & { ref?: Ref<WebView> }) => ReactElement | null
 
 export default function App() {
-  const [state, dispatch] = useReducer(reduceMobileState, initialMobileState)
-  const [connecting, setConnecting] = useState(false)
-  const [screen, setScreen] = useState<"home" | "sessions" | "files" | "diff">("home")
-  const [eventRevision, setEventRevision] = useState(0)
-  const connectionRequest = useRef(0)
-  const api = useMemo(() => (state.connection ? createOpencodeHttpClient(state.connection) : undefined), [state.connection])
+  const webview = useRef<WebView>(null)
+  const [connection, setConnection] = useState<Connection | undefined>()
+  const [loaded, setLoaded] = useState(false)
+  const [canGoBack, setCanGoBack] = useState(false)
+  const [error, setError] = useState<string | undefined>()
+  const source = useMemo(() => ({ uri: "file:///android_asset/opencode-web/index.html#/" }), [])
+  const injected = useMemo(() => {
+    if (!connection) return "true;"
+    return `window.__OPENCODE__ = Object.assign({}, window.__OPENCODE__, { mobile: { server: ${JSON.stringify(connection)} } }); true;`
+  }, [connection])
 
   useEffect(() => {
-    const request = connectionRequest.current + 1
-    connectionRequest.current = request
     let active = true
-
-    createConnectionStore().load().then(async (connection) => {
-      if (!connection || connectionRequest.current !== request || !active) return
-      try {
-        const health = await createOpencodeHttpClient(connection).health()
-        if (connectionRequest.current !== request || !active) return
-        dispatch({ type: "connected", connection, version: health.version })
-      } catch (error) {
-        if (connectionRequest.current !== request || !active) return
-        dispatch({ type: "connection.failed", error: error instanceof Error ? error.message : String(error) })
-      }
-    })
+    createConnectionStore()
+      .load()
+      .then((saved) => {
+        if (active) setConnection(saved)
+      })
+      .catch((error) => {
+        if (active) setError(error instanceof Error ? error.message : String(error))
+      })
+      .finally(() => {
+        if (active) setLoaded(true)
+      })
 
     return () => {
       active = false
@@ -44,96 +39,114 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!state.connection || !api) return
-    const abort = new AbortController()
-    streamEvents(state.connection, (message) => handleEvent(message, dispatch, api, state.selectedSessionID, setEventRevision), abort.signal).catch(() => undefined)
-    return () => abort.abort()
-  }, [api, state.connection, state.selectedSessionID])
-
-  async function connect(connection: Connection) {
-    const request = connectionRequest.current + 1
-    connectionRequest.current = request
-    setConnecting(true)
-
-    try {
-      const health = await createOpencodeHttpClient(connection).health()
-      await createConnectionStore().save(connection)
-      if (connectionRequest.current !== request) return
-      dispatch({ type: "connected", connection, version: health.version })
-    } catch (error) {
-      if (connectionRequest.current !== request) return
-      dispatch({ type: "connection.failed", error: error instanceof Error ? error.message : String(error) })
-    } finally {
-      if (connectionRequest.current === request) setConnecting(false)
-    }
-  }
-
-  async function respond(response: PermissionReply) {
-    if (!api || !state.permissions[0]) return
-    await api.respondPermission(state.permissions[0].requestID, response)
-    dispatch({ type: "permission.responded", requestID: state.permissions[0].requestID })
-  }
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!canGoBack) return false
+      webview.current?.goBack()
+      return true
+    })
+    return () => sub.remove()
+  }, [canGoBack])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="light-content" />
-      <PermissionBanner request={state.permissions[0]} onRespond={respond} />
-      {!state.connection || !api ? <ConnectionScreen error={state.error} connecting={connecting} onConnect={connect} /> : null}
-      {state.connection && api && screen === "home" ? (
-        <View style={{ flex: 1 }}>
-          <HomeScreen connection={state.connection} version={state.version} />
-          <View style={{ flexDirection: "row", gap: spacing.sm, padding: spacing.md }}>
-            <Pressable onPress={() => setScreen("sessions")} style={{ flex: 1, backgroundColor: colors.accent, padding: spacing.md, borderRadius: 10 }}>
-              <Text style={{ textAlign: "center", fontWeight: "800" }}>Sessions</Text>
-            </Pressable>
-            <Pressable onPress={() => setScreen("files")} style={{ flex: 1, backgroundColor: colors.accent, padding: spacing.md, borderRadius: 10 }}>
-              <Text style={{ textAlign: "center", fontWeight: "800" }}>Files</Text>
-            </Pressable>
-          </View>
-        </View>
+      {!loaded ? <LoadingScreen /> : null}
+      {loaded && !connection ? <ConnectionScreen error={error} onConnect={(next) => saveConnection(next, setConnection, setError)} /> : null}
+      {loaded && connection ? (
+        <OpencodeWebView
+          ref={webview}
+          source={source}
+          injectedJavaScriptBeforeContentLoaded={injected}
+          originWhitelist={["*"]}
+          allowFileAccess
+          allowFileAccessFromFileURLs
+          allowUniversalAccessFromFileURLs
+          mixedContentMode="always"
+          javaScriptEnabled
+          domStorageEnabled
+          setSupportMultipleWindows={false}
+          onNavigationStateChange={(event) => setCanGoBack(event.canGoBack)}
+          onShouldStartLoadWithRequest={openExternalLinks}
+          onMessage={handleMessage}
+          onError={() => {
+            setError("Could not load the bundled opencode interface. Rebuild the mobile web assets.")
+            setConnection(undefined)
+          }}
+          style={{ flex: 1, backgroundColor: colors.background }}
+        />
       ) : null}
-      {api && screen === "sessions" ? <SessionScreen api={api} sessionID={state.selectedSessionID} revision={eventRevision} onBack={() => setScreen("home")} onClearSession={() => dispatch({ type: "session.cleared" })} onSelectSession={(sessionID) => dispatch({ type: "session.selected", sessionID })} onOpenDiff={() => setScreen("diff")} /> : null}
-      {api && screen === "files" ? <FileScreen api={api} onBack={() => setScreen("home")} /> : null}
-      {api && screen === "diff" ? <DiffScreen api={api} sessionID={state.selectedSessionID} onBack={() => setScreen("sessions")} /> : null}
     </SafeAreaView>
   )
 }
 
-function handleEvent(message: SseMessage, dispatch: Dispatch<MobileAction>, api: ReturnType<typeof createOpencodeHttpClient>, selectedSessionID: string | undefined, refresh: Dispatch<SetStateAction<number>>) {
-  const data = message.data
-  if (!data || typeof data !== "object") return
-  const event = data as Record<string, unknown>
-  const type = typeof event.type === "string" ? event.type : message.event
-  const properties = event.properties && typeof event.properties === "object" ? (event.properties as Record<string, unknown>) : event
-  const permission = toPermissionRequest(properties)
+function ConnectionScreen(props: { error?: string; onConnect(connection: Connection): void }) {
+  const [url, setUrl] = useState("")
+  const [username, setUsername] = useState("opencode")
+  const [password, setPassword] = useState("")
+  const validation = getConnectionValidation({ url })
 
-  if (type === "permission.asked" && permission) dispatch({ type: "permission.requested", request: permission })
-  if (type === "permission.replied" && typeof properties.requestID === "string") dispatch({ type: "permission.responded", requestID: properties.requestID })
-  if (type.startsWith("session.") || type.startsWith("message.")) {
-    refresh((value) => value + 1)
-    refreshSelectedSession(api, dispatch, selectedSessionID)
+  return (
+    <View style={{ flex: 1, justifyContent: "center", padding: spacing.xl, backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text, fontSize: 30, fontWeight: "800" }}>opencode Android</Text>
+      <Text style={{ color: colors.muted, marginTop: spacing.sm }}>
+        Enter the LAN URL from `opencode serve --hostname 0.0.0.0 --port 4096`.
+      </Text>
+      <TextInput value={url} onChangeText={setUrl} autoCapitalize="none" style={inputStyle} placeholder="http://192.168.1.23:4096" placeholderTextColor={colors.muted} />
+      <TextInput value={username} onChangeText={setUsername} autoCapitalize="none" style={inputStyle} placeholder="Username" placeholderTextColor={colors.muted} />
+      <TextInput value={password} onChangeText={setPassword} secureTextEntry style={inputStyle} placeholder="Password (optional)" placeholderTextColor={colors.muted} />
+      {validation ? <Text style={{ color: colors.danger, marginTop: spacing.md }}>{validation}</Text> : null}
+      {props.error ? <Text style={{ color: colors.danger, marginTop: spacing.md }}>{props.error}</Text> : null}
+      <Pressable
+        disabled={Boolean(validation)}
+        style={{ marginTop: spacing.lg, backgroundColor: validation ? colors.border : colors.accent, padding: spacing.lg, borderRadius: 10 }}
+        onPress={() => props.onConnect(normalizeConnection({ url, username, password }))}
+      >
+        <Text style={{ color: "#001018", textAlign: "center", fontWeight: "800" }}>Open opencode</Text>
+      </Pressable>
+    </View>
+  )
+}
+
+function LoadingScreen() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setReady(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+  if (!ready) return null
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+      <Text style={{ color: colors.muted }}>Loading opencode...</Text>
+    </View>
+  )
+}
+
+async function saveConnection(connection: Connection, setConnection: (connection: Connection) => void, setError: (error: string | undefined) => void) {
+  try {
+    await createConnectionStore().save(connection)
+    setError(undefined)
+    setConnection(connection)
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error))
   }
 }
 
-function toPermissionRequest(value: Record<string, unknown>): PermissionRequest | undefined {
-  const requestID = stringValue(value.requestID) ?? stringValue(value.id) ?? stringValue(value.permissionID)
-  const sessionID = stringValue(value.sessionID)
-  if (!requestID || !sessionID) return
-  return {
-    sessionID,
-    requestID,
-    title: stringValue(value.title) ?? stringValue(value.permission) ?? "Permission requested",
-    metadata: value.metadata,
-  }
+function openExternalLinks(request: WebViewNavigation) {
+  if (request.url.startsWith("file:///android_asset/opencode-web/")) return true
+  if (!request.url.startsWith("http://") && !request.url.startsWith("https://")) return true
+  void Linking.openURL(request.url)
+  return false
 }
 
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value : undefined
+function handleMessage(event: WebViewMessageEvent) {
+  if (event.nativeEvent.data === "opencode.ready") return
 }
 
-function refreshSelectedSession(api: ReturnType<typeof createOpencodeHttpClient>, dispatch: Dispatch<MobileAction>, selectedSessionID?: string) {
-  if (!selectedSessionID) return
-  api.listMessages(selectedSessionID)
-    .then((messages) => dispatch({ type: "messages.loaded", sessionID: selectedSessionID, messages }))
-    .catch(() => undefined)
-}
+const inputStyle = {
+  color: colors.text,
+  borderColor: colors.border,
+  borderWidth: 1,
+  borderRadius: 10,
+  padding: spacing.md,
+  marginTop: spacing.md,
+} as const

@@ -20,6 +20,7 @@ const sentry =
     : false
 
 export default defineConfig({
+  base: process.env.OPENCODE_MOBILE_ASSETS ? "./" : undefined,
   plugins: [desktopPlugin, sentry] as any,
   server: {
     host: "0.0.0.0",

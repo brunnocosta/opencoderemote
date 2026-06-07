@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "opencodeapp.web.app",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#0b0f14"
       }

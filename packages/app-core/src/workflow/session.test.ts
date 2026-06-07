@@ -3,7 +3,7 @@ import { getMessageText } from "./session"
 
 describe("getMessageText", () => {
   test("joins text parts", () => {
-    expect(getMessageText({ parts: [{ type: "text", text: "a" }, { type: "text", text: "b" }] })).toBe("a\nb")
+    expect(getMessageText({ parts: [{ text: "a" }, { text: "b" }] })).toBe("a\nb")
   })
 
   test("falls back to role", () => {

@@ -18,7 +18,7 @@ describe("createOpencodeHttpClient", () => {
     })
 
     expect(await client.health()).toEqual({ healthy: true, version: "1.0.0" })
-    expect(calls[0].url).toBe("http://localhost:4096/global/health")
+    expect(calls[0]!.url).toBe("http://localhost:4096/global/health")
   })
 
   test("uses current permission reply endpoint", async () => {
@@ -29,7 +29,7 @@ describe("createOpencodeHttpClient", () => {
     })
 
     expect(await client.respondPermission("req_1", "once")).toBe(true)
-    expect(calls[0].url).toBe("http://localhost:4096/permission/req_1/reply")
-    expect(calls[0].init?.body).toBe(JSON.stringify({ reply: "once" }))
+    expect(calls[0]!.url).toBe("http://localhost:4096/permission/req_1/reply")
+    expect(calls[0]!.init?.body).toBe(JSON.stringify({ reply: "once" }))
   })
 })

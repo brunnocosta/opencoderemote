@@ -6,8 +6,9 @@
   "main": "index.ts",
   "scripts": {
     "build:web-assets": "bun run script/build-web-assets.ts",
+    "clean:android": "bun run script/clean-android.ts",
     "dev": "expo start",
-    "android": "expo prebuild --platform android && bun run build:web-assets && expo run:android",
+    "android": "bun run clean:android && expo prebuild --platform android && bun run build:web-assets && CMAKE_BUILD_PARALLEL_LEVEL=1 bunx expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsgo --noEmit",
     "test": "bun test src"
@@ -15,6 +16,7 @@
   "dependencies": {
     "expo": "~54.0.34",
     "expo-secure-store": "~15.0.8",
+    "expo-system-ui": "~6.0.9",
     "expo-dev-client": "~6.0.21",
     "react": "19.1.0",
     "react-native": "0.81.5",

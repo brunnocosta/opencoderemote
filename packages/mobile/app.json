@@ -5,6 +5,7 @@
     "scheme": "opencode-mobile",
     "version": "1.15.10",
     "orientation": "portrait",
+    "newArchEnabled": false,
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,

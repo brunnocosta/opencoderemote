@@ -4,6 +4,16 @@
 - Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.
 - Prefer automation: execute requested actions without confirmation unless blocked by missing info or safety/irreversibility.
 
+## Repository Focus
+
+- The current priority for this repository is the Android/mobile port in `packages/mobile`.
+- The chosen mobile strategy is "mode 5": reuse the existing responsive `packages/app` web UI and ship it inside an Expo/React Native Android shell.
+- The APK bundles the built web app under Android assets and loads it with `react-native-webview`. The native shell should stay small: initial server connection, secure persistence, Android lifecycle/navigation affordances, and WebView integration.
+- Prefer implementing product/UI behavior in `packages/app` so web, desktop, and mobile keep sharing the same interface. Use `packages/mobile` only for native shell concerns and mobile-specific glue.
+- Do not revive the previous full native reimplementation unless explicitly requested. It is acceptable to discard old native UI/state/client code when the WebView path already covers the behavior.
+- Durable Android changes should be made through tracked Expo config, package scripts, or scripts under `packages/mobile/script`. Treat generated native Android files as ephemeral unless the workflow is intentionally changed to track them.
+- From the repo root, use `bun android` for the mobile build/run flow. The package script handles cleaning stale native artifacts, Expo prebuild, web asset bundling, and `expo run:android`; keep native CMake parallelism constrained through `CMAKE_BUILD_PARALLEL_LEVEL` in that script when needed.
+
 ## Commits and PR Titles
 
 Use conventional commit-style messages and PR titles: `type(scope): summary`.

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type Ref } from "react"
-import { BackHandler, Linking, Pressable, SafeAreaView, StatusBar, Text, TextInput, View } from "react-native"
+import { BackHandler, Linking, Pressable, StatusBar, Text, TextInput, View } from "react-native"
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context"
 import { WebView, type WebViewMessageEvent, type WebViewNavigation, type WebViewProps } from "react-native-webview"
 import { createConnectionStore } from "./src/connection-store"
 import { getConnectionValidation, normalizeConnection, type Connection } from "./src/connection"
@@ -8,7 +9,16 @@ import { colors, spacing } from "./src/theme"
 const OpencodeWebView = WebView as unknown as (props: WebViewProps & { ref?: Ref<WebView> }) => ReactElement | null
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <MobileApp />
+    </SafeAreaProvider>
+  )
+}
+
+function MobileApp() {
   const webview = useRef<WebView>(null)
+  const insets = useSafeAreaInsets()
   const [connection, setConnection] = useState<Connection | undefined>()
   const [loaded, setLoaded] = useState(false)
   const [canGoBack, setCanGoBack] = useState(false)
@@ -48,8 +58,8 @@ export default function App() {
   }, [canGoBack])
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle="light-content" />
+    <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: colors.background }}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} translucent={false} />
       {!loaded ? <LoadingScreen /> : null}
       {loaded && !connection ? <ConnectionScreen error={error} onConnect={(next) => saveConnection(next, setConnection, setError)} /> : null}
       {loaded && connection ? (
@@ -75,7 +85,7 @@ export default function App() {
           style={{ flex: 1, backgroundColor: colors.background }}
         />
       ) : null}
-    </SafeAreaView>
+    </View>
   )
 }
 

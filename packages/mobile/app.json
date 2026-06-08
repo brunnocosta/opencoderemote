@@ -4,22 +4,59 @@
     "slug": "opencode-mobile",
     "scheme": "opencode-mobile",
     "version": "1.15.10",
+    "icon": "./assets/icon-512x512.png",
+    "backgroundColor": "#0b0f14",
     "orientation": "portrait",
     "newArchEnabled": false,
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/icon-512x512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b0f14"
+    },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#0b0f14",
+      "hidden": false
+    },
+    "androidNavigationBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#0b0f14",
+      "enforceContrast": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "opencodeapp.web.app"
     },
     "android": {
       "package": "opencodeapp.web.app",
+      "versionCode": 11511,
+      "backgroundColor": "#0b0f14",
+      "icon": "./assets/icon-512x512.png",
       "usesCleartextTraffic": true,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE"
+      ],
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-512x512.png",
         "backgroundColor": "#0b0f14"
       }
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-navigation-bar",
+        {
+          "visibility": "visible",
+          "position": "relative",
+          "behavior": "inset-touch",
+          "backgroundColor": "#0b0f14",
+          "barStyle": "light"
+        }
+      ]
     ]
   }
 }

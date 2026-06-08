@@ -8,7 +8,7 @@ const outputDir = path.join(mobileDir, "android", "app", "src", "main", "assets"
 
 const build = Bun.spawn(["bun", "run", "build"], {
   cwd: appDir,
-  env: { ...process.env, OPENCODE_MOBILE_ASSETS: "1" },
+  env: { ...process.env, NODE_ENV: "production", OPENCODE_CHANNEL: "prod", OPENCODE_MOBILE_ASSETS: "1" },
   stdout: "inherit",
   stderr: "inherit",
 })

@@ -7,7 +7,7 @@ import { connectionToForm, getConnectionValidation, normalizeConnectionForm, typ
 import { checkServerHealth } from "./src/health"
 import { getBackAction, getNavigationAction } from "./src/navigation"
 import { colors, spacing } from "./src/theme"
-import { createBridgeInjection, getBundledWebSource, isReadyMessage } from "./src/webview-bridge"
+import { createBridgeInjection, getBundledWebSource, getWebViewRuntimeSettings, isReadyMessage } from "./src/webview-bridge"
 
 const OpencodeWebView = WebView as unknown as (props: WebViewProps & { ref?: Ref<WebView> }) => ReactElement | null
 
@@ -31,6 +31,7 @@ function MobileApp() {
   const [checking, setChecking] = useState(false)
   const source = useMemo(() => getBundledWebSource(), [])
   const injected = useMemo(() => createBridgeInjection(connection), [connection])
+  const runtimeSettings = useMemo(() => getWebViewRuntimeSettings(), [])
 
   useEffect(() => {
     let active = true
@@ -102,6 +103,9 @@ function MobileApp() {
             mixedContentMode="always"
             javaScriptEnabled
             domStorageEnabled
+            androidLayerType={runtimeSettings.androidLayerType}
+            keyboardDisplayRequiresUserAction={runtimeSettings.keyboardDisplayRequiresUserAction}
+            overScrollMode={runtimeSettings.overScrollMode}
             setSupportMultipleWindows={false}
             onNavigationStateChange={(event) => setCanGoBack(event.canGoBack)}
             onShouldStartLoadWithRequest={openExternalLinks}

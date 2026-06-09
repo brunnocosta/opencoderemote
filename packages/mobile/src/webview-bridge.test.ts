@@ -1,9 +1,19 @@
 import { describe, expect, test } from "bun:test"
-import { createBridgeInjection, getBundledWebSource, isReadyMessage } from "./webview-bridge"
+import { createBridgeInjection, getBundledWebSource, getWebViewRuntimeSettings, isReadyMessage } from "./webview-bridge"
 
 describe("getBundledWebSource", () => {
   test("returns bundled Android asset source", () => {
     expect(getBundledWebSource()).toEqual({ uri: "file:///android_asset/opencode-web/index.html#/" })
+  })
+})
+
+describe("getWebViewRuntimeSettings", () => {
+  test("uses hardware rendering and Android input support", () => {
+    expect(getWebViewRuntimeSettings()).toEqual({
+      androidLayerType: "hardware",
+      keyboardDisplayRequiresUserAction: false,
+      overScrollMode: "never",
+    })
   })
 })
 

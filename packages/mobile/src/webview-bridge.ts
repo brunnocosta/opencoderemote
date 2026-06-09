@@ -6,6 +6,14 @@ export function getBundledWebSource() {
   return { uri: `${bundledWebAssetPrefix}index.html#/` }
 }
 
+export function getWebViewRuntimeSettings() {
+  return {
+    androidLayerType: "hardware" as const,
+    keyboardDisplayRequiresUserAction: false,
+    overScrollMode: "never" as const,
+  }
+}
+
 export function createBridgeInjection(connection?: Connection) {
   if (!connection) return "true;"
   const json = JSON.stringify(connection)

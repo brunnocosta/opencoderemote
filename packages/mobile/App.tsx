@@ -89,13 +89,7 @@ function MobileApp() {
         />
       ) : null}
       {loaded && connection && !showingConnection ? (
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <Text style={{ color: colors.muted, flex: 1 }} numberOfLines={1}>{connection.url}</Text>
-            <Pressable onPress={() => setShowingConnection(true)} style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
-              <Text style={{ color: colors.accent, fontWeight: "800" }}>Change</Text>
-            </Pressable>
-          </View>
+        <>
           {/* Permissive settings required for bundled local assets (file:///android_asset/) and web-to-native bridge communication. Safe because content is bundled, not remote. */}
           <OpencodeWebView
             ref={webview}
@@ -118,7 +112,7 @@ function MobileApp() {
             }}
             style={{ flex: 1, backgroundColor: colors.background }}
           />
-        </View>
+        </>
       ) : null}
     </View>
   )

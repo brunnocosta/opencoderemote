@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type Ref } from "react"
-import { BackHandler, Linking, Pressable, StatusBar, Text, TextInput, View } from "react-native"
+import { BackHandler, Linking, Modal, Pressable, StatusBar, Text, TextInput, View } from "react-native"
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context"
 import { WebView, type WebViewMessageEvent, type WebViewNavigation, type WebViewProps } from "react-native-webview"
 import { createConnectionStore } from "./src/connection-store"
@@ -29,6 +29,7 @@ function MobileApp() {
   const [canGoBack, setCanGoBack] = useState(false)
   const [error, setError] = useState<string | undefined>()
   const [checking, setChecking] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const source = useMemo(() => getBundledWebSource(), [])
   const injected = useMemo(() => createBridgeInjection(connection), [connection])
 
@@ -90,12 +91,25 @@ function MobileApp() {
       ) : null}
       {loaded && connection && !showingConnection ? (
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <Text style={{ color: colors.muted, flex: 1 }} numberOfLines={1}>{connection.url}</Text>
-            <Pressable onPress={() => setShowingConnection(true)} style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
-              <Text style={{ color: colors.accent, fontWeight: "800" }}>Change</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => setMenuOpen(true)}
+            style={{
+              position: "absolute",
+              top: spacing.md,
+              right: spacing.md,
+              zIndex: 10,
+              width: 40,
+              height: 40,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.background,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 20, lineHeight: 20 }}>⋮</Text>
+          </Pressable>
           {/* Permissive settings required for bundled local assets (file:///android_asset/) and web-to-native bridge communication. Safe because content is bundled, not remote. */}
           <OpencodeWebView
             ref={webview}
@@ -118,6 +132,30 @@ function MobileApp() {
             }}
             style={{ flex: 1, backgroundColor: colors.background }}
           />
+          <Modal visible={menuOpen} transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
+            <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }} onPress={() => setMenuOpen(false)}>
+              <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: spacing.xl }}>
+                <Pressable
+                  onPress={() => {
+                    setMenuOpen(false)
+                    setShowingConnection(true)
+                  }}
+                  style={{ paddingVertical: spacing.lg, paddingHorizontal: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.border }}
+                >
+                  <Text style={{ color: colors.text, fontSize: 18, fontWeight: "600" }}>Change server</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setMenuOpen(false)
+                    forgetConnection(setConnection, setForm, setShowingConnection, setError)
+                  }}
+                  style={{ paddingVertical: spacing.lg, paddingHorizontal: spacing.xl }}
+                >
+                  <Text style={{ color: colors.danger, fontSize: 18, fontWeight: "600" }}>Forget server</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Modal>
         </View>
       ) : null}
     </View>

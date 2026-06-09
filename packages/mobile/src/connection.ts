@@ -39,7 +39,7 @@ export function connectionToForm(connection?: Connection): ConnectionForm {
   }
 }
 
-export function getConnectionValidation(connection: Pick<ConnectionForm, "url">) {
+export function getConnectionValidation(connection: ConnectionForm) {
   if (!normalizeServerUrl(connection.url)) return "Server URL is required"
   return undefined
 }

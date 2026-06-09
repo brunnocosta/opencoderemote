@@ -2,7 +2,7 @@
 
 Expo Android shell for the responsive opencode web app.
 
-The APK bundles the built `packages/app` UI under Android assets and loads it in a WebView. The native shell only handles the initial server connection and secure persistence; the actual opencode interface stays in `packages/app`.
+The APK bundles the built `packages/app` UI under Android assets and loads it in a WebView. The native shell handles server connection, optional credentials, secure persistence, Android back behavior, external links, and WebView integration. The actual opencode interface stays in `packages/app`.
 
 ## Development
 
@@ -19,6 +19,10 @@ bun android
 ```
 
 Use your machine LAN IP in the app, for example `http://192.168.1.10:4096`.
+
+Password is optional in the Android shell. If your server was started with `OPENCODE_SERVER_PASSWORD`, enter it before opening opencode. The app attempts a health check before opening the bundled WebView; if the check fails, it shows the error but still lets you continue to open the WebView.
+
+Use the native Change button in the header above the WebView to edit the saved server. Editing does not clear the saved connection automatically. Use Forget server from the connection screen to delete it.
 
 Do not expose `opencode serve` directly to the public internet without HTTPS and access controls.
 

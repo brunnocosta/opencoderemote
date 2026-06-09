@@ -1,6 +1,6 @@
 import { onMount } from "solid-js"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { showToast } from "@opencode-ai/ui/toast"
+import { showToast } from "@/utils/toast"
 import { usePrompt, type ContentPart, type ImageAttachmentPart } from "@/context/prompt"
 import { useLanguage } from "@/context/language"
 import { uuid } from "@/utils/uuid"
@@ -32,6 +32,7 @@ type PromptAttachmentsInput = {
   focusEditor: () => void
   addPart: (part: ContentPart) => boolean
   readClipboardImage?: () => Promise<File | null>
+  getPathForFile?: (file: File) => string
 }
 
 export function createPromptAttachments(input: PromptAttachmentsInput) {
@@ -62,6 +63,7 @@ export function createPromptAttachments(input: PromptAttachmentsInput) {
       type: "image",
       id: uuid(),
       filename: file.name,
+      sourcePath: input.getPathForFile?.(file) || undefined,
       mime,
       dataUrl: url,
     }

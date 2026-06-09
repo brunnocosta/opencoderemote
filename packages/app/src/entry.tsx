@@ -180,6 +180,7 @@ if (root instanceof HTMLElement) {
         <AppBaseProviders>
           <AppInterface
             defaultServer={ServerConnection.Key.make(getDefaultUrl())}
+            canonicalLocalServer={ServerConnection.key(server)}
             servers={[server]}
             router={mobileServer ? HashRouter : undefined}
             disableHealthCheck

@@ -313,6 +313,11 @@ export const dict = {
 
   "dialog.directory.search.placeholder": "Пошук папок",
   "dialog.directory.empty": "Папок не знайдено",
+  "dialog.directory.action.selectFile": "Вибрати файл",
+  "dialog.directory.action.selectFolder": "Вибрати папку",
+  "dialog.directory.root": "Корінь",
+  "dialog.directory.parent": "Батьківська папка",
+  "dialog.directory.readError": "Не вдалося прочитати цю папку",
 
   "app.server.unreachable": "Не вдалося досягти {{server}}",
   "app.server.retrying": "Автоматичне повторення...",
@@ -759,8 +764,7 @@ export const dict = {
   "settings.general.row.followup.option.queue": "Черга",
   "settings.general.row.followup.option.steer": "Керування",
   "settings.general.row.showFileTree.title": "Дерево файлів",
-  "settings.general.row.showFileTree.description":
-    "Показувати перемикач і панель дерева файлів у сесіях на робочому столі",
+  "settings.general.row.showFileTree.description": "Показувати панель дерева файлів у сесіях на робочому столі",
   "settings.general.row.showNavigation.title": "Елементи навігації",
   "settings.general.row.showNavigation.description": "Показувати кнопки назад і вперед у заголовку робочого столу",
   "settings.general.row.showSearch.title": "Палітра команд",

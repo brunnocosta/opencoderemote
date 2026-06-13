@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   disposeIfDisposable,
+  configureTerminalTextarea,
   getHoveredLinkText,
   getSpeechRecognitionCtor,
   hasSetOption,
@@ -37,6 +38,19 @@ describe("runtime adapters", () => {
     setOptionIfSupported(value, "fontFamily", "Berkeley Mono")
     expect(calls).toEqual([["fontFamily", "Berkeley Mono"]])
     expect(() => setOptionIfSupported({}, "fontFamily", "Berkeley Mono")).not.toThrow()
+  })
+
+  test("configures terminal textarea for mobile WebView input", () => {
+    const textarea = document.createElement("textarea")
+    configureTerminalTextarea(textarea)
+    expect(textarea.getAttribute("inputmode")).toBe("text")
+    expect(textarea.autocapitalize).toBe("none")
+    expect(textarea.autocomplete).toBe("off")
+    expect(textarea.spellcheck).toBe(false)
+    expect(textarea.style.fontSize).toBe("16px")
+    expect(textarea.style.transform).toBe("translateY(-100vh)")
+    expect(textarea.style.opacity).toBe("0.01")
+    expect(textarea.style.clipPath).toBe("none")
   })
 
   test("reads hovered link text safely", () => {

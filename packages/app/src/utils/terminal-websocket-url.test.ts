@@ -1,5 +1,27 @@
 import { describe, expect, test } from "bun:test"
-import { terminalWebSocketURL } from "./terminal-websocket-url"
+import { shouldFallbackFromConnectTokenStatus, shouldUsePtyConnectToken, terminalWebSocketURL } from "./terminal-websocket-url"
+
+describe("shouldUsePtyConnectToken", () => {
+  test("skips connect tokens for file-backed WebView origins", () => {
+    expect(shouldUsePtyConnectToken("file://")).toBe(false)
+  })
+
+  test("uses connect tokens for normal web origins", () => {
+    expect(shouldUsePtyConnectToken("http://localhost:4444")).toBe(true)
+    expect(shouldUsePtyConnectToken("https://app.opencode.ai")).toBe(true)
+  })
+})
+
+describe("shouldFallbackFromConnectTokenStatus", () => {
+  test("falls back when origin checks reject file-backed WebView token requests", () => {
+    expect(shouldFallbackFromConnectTokenStatus(403)).toBe(true)
+  })
+
+  test("falls back for servers without token support", () => {
+    expect(shouldFallbackFromConnectTokenStatus(404)).toBe(true)
+    expect(shouldFallbackFromConnectTokenStatus(405)).toBe(true)
+  })
+})
 
 describe("terminalWebSocketURL", () => {
   test("uses query auth without embedding credentials in websocket URL", () => {

@@ -22,6 +22,18 @@ export const setOptionIfSupported = (value: unknown, key: string, next: unknown)
   value.setOption(key, next)
 }
 
+export const configureTerminalTextarea = (textarea: HTMLTextAreaElement | undefined) => {
+  if (!textarea) return
+  textarea.setAttribute("inputmode", "text")
+  textarea.autocapitalize = "none"
+  textarea.autocomplete = "off"
+  textarea.spellcheck = false
+  textarea.style.fontSize = "16px"
+  textarea.style.transform = "translateY(-100vh)"
+  textarea.style.opacity = "0.01"
+  textarea.style.clipPath = "none"
+}
+
 export const getHoveredLinkText = (value: unknown) => {
   if (!isRecord(value)) return
   const link = value.currentHoveredLink

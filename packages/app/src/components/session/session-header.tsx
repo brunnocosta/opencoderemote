@@ -27,6 +27,7 @@ import { Persist, persisted } from "@/utils/persist"
 import { StatusPopover, StatusPopoverV2 } from "../status-popover"
 import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
+import { shouldUseDesktopV2Header } from "./session-header-helpers"
 
 const OPEN_APPS = [
   "vscode",
@@ -155,7 +156,7 @@ export function SessionHeader() {
   })
   const hotkey = createMemo(() => command.keybind("file.open"))
   const os = createMemo(() => detectOS(platform))
-  const isDesktopV2 = createMemo(() => platform.platform === "desktop" && settings.general.newLayoutDesigns())
+  const isDesktopV2 = createMemo(() => shouldUseDesktopV2Header(platform.platform, settings.general.newLayoutDesigns()))
   const search = createMemo(() => (isDesktopV2() ? settings.general.showSearch() : true))
   const tree = createMemo(() => (isDesktopV2() ? settings.general.showFileTree() : true))
   const term = createMemo(() => (isDesktopV2() ? settings.general.showTerminal() : true))
@@ -322,7 +323,7 @@ export function SessionHeader() {
         {(mount) => (
           <Portal mount={mount()}>
             <Show
-              when={isDesktopV2}
+              when={isDesktopV2()}
               fallback={
                 <div class="flex items-center gap-2">
                   <Show when={projectDirectory()}>

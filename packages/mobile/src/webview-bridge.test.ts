@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { createBridgeInjection, getBundledWebSource, getWebViewRuntimeSettings, isReadyMessage } from "./webview-bridge"
+import {
+  createBridgeInjection,
+  getBundledWebSource,
+  getWebViewInjection,
+  getWebViewRuntimeSettings,
+  parseWebViewLogMessage,
+  isReadyMessage,
+} from "./webview-bridge"
 
 describe("getBundledWebSource", () => {
   test("returns bundled Android asset source", () => {
@@ -14,6 +21,24 @@ describe("getWebViewRuntimeSettings", () => {
       keyboardDisplayRequiresUserAction: false,
       overScrollMode: "never",
     })
+  })
+})
+
+describe("getWebViewInjection", () => {
+  test("forwards console and error events through the native bridge", () => {
+    const result = getWebViewInjection()
+    expect(result).toContain("window.ReactNativeWebView.postMessage")
+    expect(result).toContain("opencode.webview.log")
+    expect(result).toContain("unhandledrejection")
+    expect(result).toContain("window.fetch")
+    expect(result).toContain("window.WebSocket")
+    expect(result).toContain("ws:send")
+  })
+
+  test("includes server bridge when connection exists", () => {
+    expect(getWebViewInjection({ url: "http://localhost:4096", username: "opencode" })).toContain(
+      'mobile: { server: {"url":"http://localhost:4096","username":"opencode"} }',
+    )
   })
 })
 
@@ -50,6 +75,20 @@ describe("createBridgeInjection", () => {
     const result = createBridgeInjection({ url: "http://test.com", username: "test\u2029break" })
     expect(result).not.toContain("\u2029")
     expect(result).toContain("\\u2029")
+  })
+})
+
+describe("parseWebViewLogMessage", () => {
+  test("parses WebView log messages", () => {
+    expect(parseWebViewLogMessage(JSON.stringify({ type: "opencode.webview.log", level: "error", values: ["boom"] }))).toEqual({
+      level: "error",
+      values: ["boom"],
+    })
+  })
+
+  test("ignores unrelated messages", () => {
+    expect(parseWebViewLogMessage("opencode.ready")).toBeUndefined()
+    expect(parseWebViewLogMessage(JSON.stringify({ type: "other" }))).toBeUndefined()
   })
 })
 

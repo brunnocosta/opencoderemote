@@ -1,3 +1,20 @@
+const terminalDecoder = new TextDecoder()
+
+export function decodeTerminalMessage(data: unknown) {
+  if (typeof data === "string") return { type: "data" as const, data }
+  if (!(data instanceof ArrayBuffer)) return { type: "data" as const, data: "" }
+
+  const bytes = new Uint8Array(data)
+  if (bytes[0] !== 0) return { type: "data" as const, data: terminalDecoder.decode(bytes) }
+
+  try {
+    const meta = JSON.parse(terminalDecoder.decode(bytes.subarray(1))) as { cursor?: unknown }
+    return { type: "control" as const, cursor: meta.cursor }
+  } catch {
+    return { type: "control" as const, cursor: undefined }
+  }
+}
+
 export function terminalWriter(
   write: (data: string, done?: VoidFunction) => void,
   schedule: (flush: VoidFunction) => void = queueMicrotask,

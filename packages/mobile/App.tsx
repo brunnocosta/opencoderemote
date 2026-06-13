@@ -7,7 +7,7 @@ import { connectionToForm, getConnectionValidation, normalizeConnectionForm, typ
 import { checkServerHealth } from "./src/health"
 import { getBackAction, getNavigationAction } from "./src/navigation"
 import { colors, spacing } from "./src/theme"
-import { createBridgeInjection, getBundledWebSource, getWebViewRuntimeSettings, isReadyMessage } from "./src/webview-bridge"
+import { getBundledWebSource, getWebViewInjection, getWebViewRuntimeSettings, isReadyMessage, parseWebViewLogMessage } from "./src/webview-bridge"
 
 const OpencodeWebView = WebView as unknown as (props: WebViewProps & { ref?: Ref<WebView> }) => ReactElement | null
 
@@ -30,7 +30,7 @@ function MobileApp() {
   const [error, setError] = useState<string | undefined>()
   const [checking, setChecking] = useState(false)
   const source = useMemo(() => getBundledWebSource(), [])
-  const injected = useMemo(() => createBridgeInjection(connection), [connection])
+  const injected = useMemo(() => getWebViewInjection(connection), [connection])
   const runtimeSettings = useMemo(() => getWebViewRuntimeSettings(), [])
 
   useEffect(() => {
@@ -244,6 +244,11 @@ function openExternalLinks(request: WebViewNavigation) {
 }
 
 function handleMessage(event: WebViewMessageEvent) {
+  const log = parseWebViewLogMessage(event.nativeEvent.data)
+  if (log) {
+    console.log(`[opencode webview ${log.level}]`, ...log.values)
+    return
+  }
   if (isReadyMessage(event.nativeEvent.data)) return
 }
 

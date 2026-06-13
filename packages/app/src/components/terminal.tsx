@@ -13,9 +13,9 @@ import { useSDK } from "@/context/sdk"
 import { useServer } from "@/context/server"
 import { terminalFontFamily, useSettings } from "@/context/settings"
 import type { LocalPTY } from "@/context/terminal"
-import { disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
-import { terminalWriter } from "@/utils/terminal-writer"
-import { terminalWebSocketURL } from "@/utils/terminal-websocket-url"
+import { configureTerminalTextarea, disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
+import { decodeTerminalMessage, terminalWriter } from "@/utils/terminal-writer"
+import { shouldFallbackFromConnectTokenStatus, shouldUsePtyConnectToken, terminalWebSocketURL } from "@/utils/terminal-websocket-url"
 
 const TOGGLE_TERMINAL_ID = "terminal.toggle"
 const DEFAULT_TOGGLE_TERMINAL_KEYBIND = "ctrl+`"
@@ -64,7 +64,7 @@ const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors> = {
 }
 
 const debugTerminal = (...values: unknown[]) => {
-  if (!import.meta.env.DEV) return
+  if (!import.meta.env.DEV && !window.__OPENCODE__?.mobile) return
   console.debug("[terminal]", ...values)
 }
 
@@ -97,10 +97,21 @@ const useTerminalUiBindings = (input: {
   }
 
   const handleTextareaFocus = () => {
+    debugTerminal("textarea focus")
     input.term.options.cursorBlink = true
   }
   const handleTextareaBlur = () => {
+    debugTerminal("textarea blur")
     input.term.options.cursorBlink = false
+  }
+  const handleBeforeInput = (event: InputEvent) => {
+    debugTerminal("textarea beforeinput", event.inputType, event.data)
+  }
+  const handleInput = () => {
+    debugTerminal("textarea input", input.term.textarea?.value)
+  }
+  const handleKeyDown = (event: KeyboardEvent) => {
+    debugTerminal("textarea keydown", event.key)
   }
 
   input.container.addEventListener("copy", handleCopy, true)
@@ -123,8 +134,14 @@ const useTerminalUiBindings = (input: {
 
   input.term.textarea?.addEventListener("focus", handleTextareaFocus)
   input.term.textarea?.addEventListener("blur", handleTextareaBlur)
+  input.term.textarea?.addEventListener("beforeinput", handleBeforeInput)
+  input.term.textarea?.addEventListener("input", handleInput)
+  input.term.textarea?.addEventListener("keydown", handleKeyDown)
   input.cleanups.push(() => input.term.textarea?.removeEventListener("focus", handleTextareaFocus))
   input.cleanups.push(() => input.term.textarea?.removeEventListener("blur", handleTextareaBlur))
+  input.cleanups.push(() => input.term.textarea?.removeEventListener("beforeinput", handleBeforeInput))
+  input.cleanups.push(() => input.term.textarea?.removeEventListener("input", handleInput))
+  input.cleanups.push(() => input.term.textarea?.removeEventListener("keydown", handleKeyDown))
 }
 
 const persistTerminal = (input: {
@@ -312,9 +329,13 @@ export const Terminal = (props: TerminalProps) => {
   const focusTerminal = () => {
     const t = term
     if (!t) return
+    debugTerminal("focusTerminal", document.activeElement?.tagName, !!t.textarea)
     t.focus()
     t.textarea?.focus()
-    setTimeout(() => t.textarea?.focus(), 0)
+    setTimeout(() => {
+      t.textarea?.focus()
+      debugTerminal("focusTerminal deferred", document.activeElement === t.textarea)
+    }, 0)
   }
   const handlePointerDown = () => {
     const activeElement = document.activeElement
@@ -398,6 +419,7 @@ export const Terminal = (props: TerminalProps) => {
       serializeAddon = serializer
 
       t.open(container)
+      configureTerminalTextarea(t.textarea)
       useTerminalUiBindings({
         container,
         term: t,
@@ -417,6 +439,7 @@ export const Terminal = (props: TerminalProps) => {
       })
       cleanups.push(() => disposeIfDisposable(onResize))
       const onData = t.onData((data) => {
+        debugTerminal("onData", data.length, JSON.stringify(data))
         if (ws?.readyState === WebSocket.OPEN) ws.send(data)
       })
       cleanups.push(() => disposeIfDisposable(onData))
@@ -461,7 +484,6 @@ export const Terminal = (props: TerminalProps) => {
       }
 
       const once = { value: false }
-      const decoder = new TextDecoder()
 
       const fail = (err: unknown) => {
         if (disposed) return
@@ -480,6 +502,7 @@ export const Terminal = (props: TerminalProps) => {
           })
 
       const connectToken = async () => {
+        if (!shouldUsePtyConnectToken(location.origin)) return
         const result = await client.pty
           .connectToken(
             { ptyID: id, directory },
@@ -494,9 +517,7 @@ export const Terminal = (props: TerminalProps) => {
           })
         if (!result) return
         if (result.response.status === 200 && result.data?.ticket) return result.data.ticket
-        if (result.response.status === 404 || result.response.status === 405) return
-        if (result.response.status === 403)
-          throw new Error("PTY connect ticket rejected by origin or CSRF checks. Check the server CORS config.")
+        if (shouldFallbackFromConnectTokenStatus(result.response.status)) return
         throw new Error(`PTY connect ticket failed with ${result.response.status}`)
       }
 
@@ -555,27 +576,19 @@ export const Terminal = (props: TerminalProps) => {
 
         const handleMessage = (event: MessageEvent) => {
           if (disposed) return
-          if (event.data instanceof ArrayBuffer) {
-            const bytes = new Uint8Array(event.data)
-            if (bytes[0] !== 0) return
-            const json = decoder.decode(bytes.subarray(1))
-            try {
-              const meta = JSON.parse(json) as { cursor?: unknown }
-              const next = meta?.cursor
-              if (typeof next === "number" && Number.isSafeInteger(next) && next >= 0) {
-                cursor = next
-                seek = next
-              }
-            } catch (err) {
-              debugTerminal("invalid websocket control frame", err)
+          const message = decodeTerminalMessage(event.data)
+          if (message.type === "control") {
+            const next = message.cursor
+            if (typeof next === "number" && Number.isSafeInteger(next) && next >= 0) {
+              cursor = next
+              seek = next
             }
             return
           }
 
-          const data = typeof event.data === "string" ? event.data : ""
-          if (!data) return
-          output?.push(data)
-          cursor += data.length
+          if (!message.data) return
+          output?.push(message.data)
+          cursor += message.data.length
           seek = cursor
         }
 

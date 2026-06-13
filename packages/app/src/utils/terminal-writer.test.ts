@@ -1,5 +1,22 @@
 import { describe, expect, test } from "bun:test"
-import { terminalWriter } from "./terminal-writer"
+import { decodeTerminalMessage, terminalWriter } from "./terminal-writer"
+
+describe("decodeTerminalMessage", () => {
+  test("decodes text websocket frames", () => {
+    expect(decodeTerminalMessage("hello")).toEqual({ type: "data", data: "hello" })
+  })
+
+  test("decodes binary websocket output as utf-8", () => {
+    expect(decodeTerminalMessage(new TextEncoder().encode("olá").buffer)).toEqual({ type: "data", data: "olá" })
+  })
+
+  test("decodes binary control frames", () => {
+    expect(decodeTerminalMessage(new Uint8Array([0, ...new TextEncoder().encode(JSON.stringify({ cursor: 12 }))]).buffer)).toEqual({
+      type: "control",
+      cursor: 12,
+    })
+  })
+})
 
 describe("terminalWriter", () => {
   test("buffers and flushes once per schedule", () => {

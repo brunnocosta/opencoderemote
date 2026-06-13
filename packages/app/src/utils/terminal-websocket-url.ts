@@ -1,5 +1,13 @@
 import { authTokenFromCredentials } from "@/utils/server"
 
+export function shouldUsePtyConnectToken(origin: string) {
+  return origin !== "file://"
+}
+
+export function shouldFallbackFromConnectTokenStatus(status: number) {
+  return status === 403 || status === 404 || status === 405
+}
+
 export function terminalWebSocketURL(input: {
   url: string
   id: string
